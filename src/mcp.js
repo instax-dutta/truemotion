@@ -8,7 +8,7 @@ import {
 } from './state.js';
 import { validateSceneHtml, evolveGuide, evolveWarnings } from './validate.js';
 import { readSkill } from './skill.js';
-import { sceneNotes, actorExitStates, matchedCut } from './render.js';
+import { sceneNotes, actorExitStates, matchedCut, renderVideo } from './render.js';
 import { makeContactSheet } from './sheet.js';
 import { percent } from './diff.js';
 
@@ -234,6 +234,37 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
       for (const data of thumbnails) blocks.push({ type: 'image', data, mimeType: 'image/png' });
     }
     return { content: blocks };
+  }));
+
+  server.registerTool('render_video', {
+    description: 'Render the current timeline to an MP4 on disk. Use after review_timeline reports no issues. Long-running but keeps the agent fully standalone.',
+    inputSchema: z.object({
+      out: z.string().min(1).describe('Output path; relative paths resolve beside the state file.'),
+      fps: z.number().int().positive().optional(),
+      resolution: z.enum(['1080p', '720p', '540p', 'source']).optional(),
+      crf: z.number().int().min(0).max(51).optional(),
+      audio: z.string().optional().describe('Optional music bed; relative paths resolve beside the state file.'),
+      startSec: z.number().min(0).optional(),
+      endSec: z.number().positive().optional(),
+      concurrency: z.number().int().min(1).max(16).optional()
+    })
+  }, async (input) => withState(async (state) => {
+    try {
+      const baseDir = path.dirname(path.resolve(stateFile));
+      const out = path.isAbsolute(input.out) ? input.out : path.resolve(baseDir, input.out);
+      const result = await renderVideo(state, out, {
+        fps: input.fps ?? 30,
+        resolution: input.resolution,
+        crf: input.crf ?? 18,
+        audio: input.audio ? path.resolve(baseDir, input.audio) : undefined,
+        startSec: input.startSec ?? 0,
+        endSec: input.endSec ?? Infinity,
+        concurrency: input.concurrency ?? 2
+      });
+      return text(`Rendered ${result.frames} frames to ${result.output}`);
+    } catch (e) {
+      return error(`render_video failed: ${e.message}`);
+    }
   }));
 
   await server.connect(new StdioServerTransport());

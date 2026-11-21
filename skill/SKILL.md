@@ -7,7 +7,7 @@ description: Author motion-graphics video scenes for OpenMotion as self-containe
 >
 > The contract validator now rejects `from()`, external scripts/imports/URLs, timers, `requestAnimationFrame`, CSS keyframes and CSS transitions at write time. Write every entrance as `fromTo()` on the single GSAP timeline.
 >
-> After writing scenes, call `review_timeline` before finishing. It measures build/resolve motion, duration mismatches, external requests, script errors, clipped actors and tiny text, and returns one contact sheet of middle frames. Fix what it flags with `patch_scene` or `update_scene`. Every write also returns three rendered frames with the same checks, so verify against those before moving on. `read_scene` with `purpose:"evolve"` returns measured exit states for continuing actors; use those exact values to lock frame 0 of the next scene. An evolved cut with a visible pixel jump is rejected.
+> After writing scenes, call `review_timeline` before finishing. It measures build/resolve motion, duration mismatches, external requests, script errors, clipped actors and tiny text, and returns one contact sheet of middle frames. Fix what it flags with `patch_scene` or `update_scene`. Every write also returns three rendered frames with the same checks, so verify against those before moving on. Call `render_video` with the final output path once the review is clean; the agent can finish the whole film without shell access. `read_scene` with `purpose:"evolve"` returns measured exit states for continuing actors; use those exact values to lock frame 0 of the next scene. An evolved cut with a visible pixel jump is rejected.
 
 # OpenMotion Motion Design (HTML + GSAP)
 

@@ -7,4 +7,5 @@
 - `add_scene` — add scene (evolve/fresh).
 - `read_skill` — load motion reference.
 - `view_sketch` — load sketch PNG.
-- `review_timeline` — audit timeline.
+- `review_timeline` — audit timeline; returns notes plus one contact sheet.
+- `render_video` — render the timeline to MP4 from inside the agent. Accepts `out`, `fps`, `resolution`, `crf`, `audio`, `startSec`, `endSec`, `concurrency`.
