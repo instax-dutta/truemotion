@@ -12,6 +12,22 @@ const DEAD_RATIO = 0.003;
 const CUT_WARN = 0.06;
 const CUT_REJECT = 0.18;
 
+export function selectFrames(scenes, fps, startSec = 0, endSec = Infinity) {
+  const selected = [];
+  let offset = 0;
+  for (const [sceneIndex, scene] of scenes.entries()) {
+    const count = Math.max(1, Math.ceil(scene.durationSec * fps));
+    for (let i = 0; i < count; i += 1) {
+      const globalTime = offset + i / fps;
+      if (globalTime >= startSec && globalTime < endSec) {
+        selected.push({ sceneIndex, index: i, time: i / fps });
+      }
+    }
+    offset += scene.durationSec;
+  }
+  return selected;
+}
+
 export function chunkTimes(count, concurrency) {
   const groups = Array.from({ length: concurrency }, () => []);
   for (let i = 0; i < count; i += 1) {
@@ -247,17 +263,24 @@ export async function matchedCut(previous, candidate, state, { assetsDir, chrome
   }
 }
 
-export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, chrome, concurrency = 2, crf = 18 } = {}) {
+export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, chrome, concurrency = 2, startSec = 0, endSec = Infinity, crf = 18 } = {}) {
   const outputResolution = resolution || state.resolution || '1080p';
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-'));
   const browser = await launchBrowser(chrome);
   let index = 0;
   try {
-    for (const scene of state.scenes) {
-      const count = Math.max(1, Math.ceil(scene.durationSec * fps));
-      const times = Array.from({ length: count }, (_, i) => i / fps);
+    const chosen = selectFrames(state.scenes, fps, startSec, endSec);
+    if (!chosen.length) throw new Error('No frames in the requested range.');
+    const byScene = new Map();
+    for (const frame of chosen) {
+      if (!byScene.has(frame.sceneIndex)) byScene.set(frame.sceneIndex, []);
+      byScene.get(frame.sceneIndex).push(frame);
+    }
+    for (const [sceneIndex, framesToRender] of [...byScene.entries()].sort((a, b) => a[0] - b[0])) {
+      const scene = state.scenes[sceneIndex];
       const frames = await renderFramesParallel(browser, scene.html, {
-        aspect: state.aspect, resolution: outputResolution, timesSec: times, assetsDir, concurrency
+        aspect: state.aspect, resolution: outputResolution,
+        timesSec: framesToRender.map((f) => f.time), assetsDir, concurrency
       });
       for (const frame of frames) {
         index += 1;
@@ -267,7 +290,7 @@ export async function renderVideo(state, outPath, { fps = 30, resolution, assets
     fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
     const args = ['-y', '-framerate', String(fps), '-i', path.join(temp, 'frame-%06d.png')];
     if (audio && fs.existsSync(audio)) {
-      const total = state.scenes.reduce((sum, s) => sum + s.durationSec, 0);
+      const total = index / fps;
       const fadeOut = Math.max(0, total - 0.6);
       args.push('-stream_loop', '-1', '-i', audio);
       args.push('-c:v', 'libx264', '-crf', String(crf), '-pix_fmt', 'yuv420p');

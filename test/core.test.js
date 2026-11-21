@@ -6,7 +6,7 @@ import { createState, addScene, patchScene, dimensions, findScene } from '../src
 import { validateSceneHtml, evolveWarnings } from '../src/validate.js';
 import { skillPath, listSkillFiles } from '../src/skill.js';
 import { injectSceneHtml } from '../src/inject.js';
-import { chunkTimes } from '../src/render.js';
+import { chunkTimes, selectFrames } from '../src/render.js';
 
 const MINIMAL = `<!doctype html><html><head><style>/* {{FONTS_CSS}} */ .frame{width:{{W}}px;height:{{H}}px;background:#000}</style></head>
 <body><div class="frame" id="frame"><h1 data-om-id="headline">Hi</h1></div>
@@ -51,6 +51,16 @@ test('chunkTimes distributes frames without gaps or duplicates', () => {
   assert.deepEqual(groups.map((g) => g.length), [4, 3, 3]);
   assert.deepEqual(groups.flat().sort((a, b) => a - b), [...Array(10).keys()]);
   assert.deepEqual(chunkTimes(1, 4), [[0], [], [], []]);
+});
+
+test('selectFrames filters a global time range across scenes', () => {
+  const scenes = [{ durationSec: 2 }, { durationSec: 2 }];
+  const all = selectFrames(scenes, 10);
+  assert.equal(all.length, 40);
+  const middle = selectFrames(scenes, 10, 1.5, 2.5);
+  assert.equal(middle.length, 10);
+  assert.equal(middle[0].sceneIndex, 0);
+  assert.equal(middle.at(-1).sceneIndex, 1);
 });
 
 test('findScene accepts id, 1-based index, or defaults to first', () => {
