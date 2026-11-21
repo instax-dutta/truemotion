@@ -23,11 +23,16 @@ jobs:
         run: node node_modules/playwright-core/cli.js install chromium
       - name: Two-minute 1080p multi-segment A/V resume
         run: npm run test:long-av
+      - name: Short benchmark matrix
+        run: npm run benchmark -- --write
       - name: Full page-pool long-form benchmark
-        run: npm run bench:longform
+        run: LF_REPORT=docs/benchmarks/nightly-linux.md npm run bench:longform
       - name: Upload benchmark reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nightly-benchmarks
-          path: docs/benchmarks/
+          path: |
+            docs/benchmarks/latest.md
+            docs/benchmarks/av-drift.md
+            docs/benchmarks/nightly-linux.md

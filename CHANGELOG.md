@@ -60,7 +60,7 @@
 - Added unit and opt-in CLI coverage that reordering scenes changes the checkpoint digest and is rejected on resume without mutating the manifest.
 - Added opt-in CLI coverage that fps, resolution or segment size changes are rejected on resume with identical state and audio.
 - Wired the scene-order and render-setting resume suites into the golden CI job.
-- Added a nightly workflow for the two-minute A/V resume and long-form benchmark, and a tag-gated npm release workflow that verifies the tag against `package.json` before publishing.
+- Added a nightly workflow for the two-minute A/V resume and long-form benchmark, and a tag-gated npm release workflow that verifies the tag against `package.json` before publishing. The nightly writes its Linux report to a separate artifact file instead of overwriting the canonical benchmark docs.
 
 ## 0.2.0
 

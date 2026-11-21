@@ -22,6 +22,12 @@ the prior figure, so no regression was found. A separate two-scene 1080p render
 was inspected visually to confirm correct scene sequencing and typing after the
 page-pool change.
 
+The nightly GitHub Actions job also ran the 1200-frame benchmark on linux/x64
+with Node 20: 1200/1200 frames, 198.4 s, 6.0 frames/s, 2327 MiB peak tree RSS,
+11934 KiB output. Peak RSS is higher on the CI runner because of a different
+Chromium build and process accounting; it is recorded separately in the nightly
+artifact (`nightly-linux.md`) rather than overwriting this report.
+
 ## Page-pool A/B (10 scenes, 400 frames, 1080p, concurrency 2)
 
 | Implementation | Peak tree RSS | Throughput | Output |

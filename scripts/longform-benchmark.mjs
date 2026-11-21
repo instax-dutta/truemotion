@@ -92,7 +92,8 @@ const result = {
   outputKib: Math.round(fs.statSync(out).size / 1024)
 };
 console.log('\nRESULT ' + JSON.stringify(result));
-const report = path.join(root, 'docs/benchmarks/longform.md');
+const reportPath = process.env.LF_REPORT || 'docs/benchmarks/longform.md';
+const report = path.isAbsolute(reportPath) ? reportPath : path.join(root, reportPath);
 fs.mkdirSync(path.dirname(report), { recursive: true });
 fs.writeFileSync(report, `# Long-form render\n\nRecorded ${new Date().toISOString()} on ${process.platform}/${process.arch}, Node ${process.version}.\n\n\`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n\nPeak RSS is sampled across the whole process tree (Node + Chromium + ffmpeg) every 500 ms. Frames are streamed to ffmpeg in bounded batches; no staging directory is written.\n`);
 console.log(`Wrote ${report}`);
