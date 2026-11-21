@@ -7,9 +7,7 @@ import { spawnSync } from 'node:child_process';
 
 const enabled = process.env.TRUEMOTION_COMPONENT_RESUME === '1';
 
-test('resume rejects a changed component while scenes, brand, assets and audio stay identical', {
-  skip: !enabled && 'set TRUEMOTION_COMPONENT_RESUME=1'
-}, () => {
+function assertComponentChangeRejected({ key, markup, changedMarkup }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-component-resume-'));
   const bin = path.resolve('bin/truemotion.mjs');
   const stateFile = path.join(dir, 'state.json');
@@ -27,9 +25,12 @@ test('resume rejects a changed component while scenes, brand, assets and audio s
   const state = {
     ...source,
     brand: { ...source.brand },
-    components: { card: '<div class="om-card" data-om-id="card">A clear title</div>' },
+    components: { [key]: markup },
     scenes: [
-      { ...source.scenes[0], durationSec: 4, html: source.scenes[0].html.replace('<div class="frame"', '<div class="frame">{{COMPONENT:card}}') }
+      {
+        ...source.scenes[0], durationSec: 4,
+        html: source.scenes[0].html.replace('<div class="frame"', `<div class="frame">{{COMPONENT:${key}}}`)
+      }
     ]
   };
   fs.writeFileSync(stateFile, JSON.stringify(state));
@@ -51,11 +52,11 @@ test('resume rejects a changed component while scenes, brand, assets and audio s
 
   // Change only the component definition; keep everything else byte-identical.
   const changed = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-  changed.components.card = '<div class="om-card" data-om-id="card">A DIFFERENT title</div>';
+  changed.components[key] = changedMarkup;
   fs.writeFileSync(stateFile, JSON.stringify(changed));
 
   const resumed = spawnSync(process.execPath, [...args, '--resume'], { encoding: 'utf8' });
-  assert.notEqual(resumed.status, 0, 'component change must be rejected on resume');
+  assert.notEqual(resumed.status, 0, `${key} change must be rejected on resume`);
   assert.ok(resumed.stderr.includes('the state file changed since checkpointing'), resumed.stderr.slice(-600));
   assert.ok(!fs.existsSync(out), 'rejected resume must not produce a film');
 
@@ -64,4 +65,24 @@ test('resume rejects a changed component while scenes, brand, assets and audio s
   assert.ok(after.segments.length >= 1);
 
   fs.rmSync(dir, { recursive: true, force: true });
+}
+
+test('resume rejects a built-in component override change with all else identical', {
+  skip: !enabled && 'set TRUEMOTION_COMPONENT_RESUME=1'
+}, () => {
+  assertComponentChangeRejected({
+    key: 'card',
+    markup: '<div class="om-card" data-om-id="card">A clear title</div>',
+    changedMarkup: '<div class="om-card" data-om-id="card">A DIFFERENT title</div>'
+  });
+});
+
+test('resume rejects a custom state-defined component change with all else identical', {
+  skip: !enabled && 'set TRUEMOTION_COMPONENT_RESUME=1'
+}, () => {
+  assertComponentChangeRejected({
+    key: 'hero-panel',
+    markup: '<section class="om-card" data-om-id="hero">Custom one</section>',
+    changedMarkup: '<section class="om-card" data-om-id="hero">Custom two</section>'
+  });
 });

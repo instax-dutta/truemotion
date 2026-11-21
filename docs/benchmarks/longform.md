@@ -104,4 +104,6 @@ while the state and audio stay identical, so a checkpoint cannot be reused with
 incompatible frame geometry. `npm run test:component-resume` covers the same
 guarantee for `components` definitions: changing a component's markup while
 scenes, brand, assets and audio stay identical changes the digest and rejects
-the resume without rewriting the manifest.
+the resume without rewriting the manifest. Both built-in overrides and custom
+component keys are covered; a unit test separately verifies brand changes alter
+the digest.

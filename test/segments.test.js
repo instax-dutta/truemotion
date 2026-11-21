@@ -81,6 +81,14 @@ test('manifest compatibility rejects changed render settings', () => {
   assert.ok(!manifestCompatible({ ...manifest, finalized: true }, meta));
 });
 
+test('brand changes alter the scene digest', () => {
+  const base = { ...sampleState, scenes: sampleState.scenes };
+  const changed = { ...base, brand: { ...base.brand, primary: '#FF0000' } };
+  assert.notEqual(sceneDigest(base), sceneDigest(changed));
+  const manifest = { ...emptyManifest({ ...meta, digest: sceneDigest(base) }), finalized: false };
+  assert.ok(!manifestCompatible(manifest, { ...meta, digest: sceneDigest(changed) }));
+});
+
 test('scene digest is order sensitive', () => {
   const a = { id: 'a', name: 'A', durationSec: 4, html: '<html>A</html>' };
   const b = { id: 'b', name: 'B', durationSec: 4, html: '<html>B</html>' };
