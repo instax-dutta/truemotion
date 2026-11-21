@@ -163,5 +163,12 @@ All source in `src/`, `bin/` and `test/`, and all reference documents in `skill/
 
 ```bash
 npm test
+npm run selftest
 npm pack --dry-run
+npm run benchmark -- --write   # records docs/benchmarks/latest.md
 ```
+
+Measured footprint and frame rates on one machine are recorded in
+[docs/benchmarks/latest.md](docs/benchmarks/latest.md). Run the benchmark on
+your own hardware to get comparable numbers; the npm package itself is about
+430 KiB and does not include the rendered demo film.

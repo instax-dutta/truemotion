@@ -29,6 +29,7 @@
     "skill/",
     "test/",
     "examples/",
+    "scripts/",
     "docs/",
     "README.md",
     "LICENSE",
@@ -48,6 +49,7 @@
     "demo": "node examples/intro-demo.mjs",
     "demo:pro": "node examples/pro-demo.mjs",
     "selftest": "node bin/truemotion.mjs selftest",
+    "benchmark": "node scripts/benchmark.mjs",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {

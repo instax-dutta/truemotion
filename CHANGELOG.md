@@ -17,6 +17,7 @@
 - Hardened state loading with per-scene validation and atomic saves with unique
   temporary names.
 - Trimmed generated media from the npm tarball.
+- Added a reproducible benchmark and recorded measured package/runtime footprint.
 
 ## 0.2.0
 
