@@ -1,7 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 
-export const MANIFEST_VERSION = 1;
+export const MANIFEST_VERSION = 2;
+
+export function sceneDigest(state) {
+  const canonical = {
+    aspect: state.aspect,
+    brand: state.brand ?? {},
+    components: state.components ?? {},
+    scenes: (state.scenes ?? []).map((scene) => ({
+      id: scene.id, name: scene.name,
+      durationSec: scene.durationSec, html: scene.html
+    }))
+  };
+  return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
+}
 
 export function checkpointDirFor(outPath, override) {
   return path.resolve(override || `${outPath}.segments`);
@@ -69,6 +83,7 @@ export function planSegments(totalFrames, segmentSize) {
 
 export function manifestCompatible(manifest, meta) {
   if (!manifest || manifest.version !== MANIFEST_VERSION || manifest.finalized) return false;
+  if (manifest.digest && meta.digest && manifest.digest !== meta.digest) return false;
   return manifest.fps === meta.fps &&
     manifest.resolution === meta.resolution &&
     manifest.totalFrames === meta.totalFrames &&

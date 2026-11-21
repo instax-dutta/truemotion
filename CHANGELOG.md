@@ -43,6 +43,7 @@
   tests, an e2e streaming regression and a long-form benchmark with peak RSS.
 - Added a reproducible multi-minute 1080p long-form benchmark with whole-process-tree RSS sampling; confirmed flat memory across 400 and 1200 frames and a 25% RSS reduction at `--concurrency 1`.
 - Added crash-resumable rendering with MPEG-TS segment checkpoints, a byte-verified manifest, `--segment-size`, `--max-segments`, `--resume` and `--keep-checkpoints`, with unit and MCP e2e coverage.
+- Added a scene/brand/component digest to the checkpoint manifest so `--resume` rejects a state file edited since checkpointing.
 
 ## 0.2.0
 

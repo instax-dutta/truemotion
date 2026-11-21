@@ -75,6 +75,25 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     ], { encoding: 'utf8' }).stdout);
     assert.equal(Number(resumedProbe.streams[0].nb_frames), 20);
 
+    // Mutating state between checkpoint and resume must be rejected.
+    const mutateOut = path.join(dir, 'mutated.mp4');
+    await call('render_video', {
+      out: mutateOut, fps: 5, resolution: '540p', batchSize: 2,
+      segmentSize: 4, maxSegments: 1, keepCheckpoints: true
+    });
+    const persisted = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    persisted.scenes[0].html = persisted.scenes[0].html.replace('EVERY TOKEN', 'MUTATED TOKEN');
+    fs.writeFileSync(stateFile, JSON.stringify(persisted));
+    const rejected = await client.callTool({
+      name: 'render_video',
+      arguments: {
+        out: mutateOut, fps: 5, resolution: '540p', batchSize: 2,
+        segmentSize: 4, resume: true
+      }
+    });
+    assert.ok(rejected.isError, 'resume with changed state must fail');
+    assert.ok(rejected.content.find((b) => b.type === 'text').text.includes('state file changed'));
+
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);
   } finally {

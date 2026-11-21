@@ -5,10 +5,20 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   manifestPath, segmentPath, emptyManifest, writeManifest, readManifest,
-  clearCheckpoint, completedIndices, planSegments, manifestCompatible, writeConcatList
+  clearCheckpoint, completedIndices, planSegments, manifestCompatible, writeConcatList,
+  sceneDigest, MANIFEST_VERSION
 } from '../src/segments.js';
 
-const meta = { fps: 30, resolution: '1080p', totalFrames: 100, segmentSize: 40, audio: null };
+const sampleState = {
+  aspect: '16:9',
+  brand: { primary: '#F5A524' },
+  components: {},
+  scenes: [{ id: 'a', name: 'A', durationSec: 4, html: '<html></html>' }]
+};
+const meta = {
+  fps: 30, resolution: '1080p', totalFrames: 100,
+  segmentSize: 40, audio: null, digest: sceneDigest(sampleState)
+};
 
 test('segment planning covers every frame exactly once', () => {
   const segments = planSegments(100, 40);
@@ -40,6 +50,25 @@ test('manifest compatibility rejects changed render settings', () => {
   assert.ok(!manifestCompatible(manifest, { ...meta, fps: 24 }));
   assert.ok(!manifestCompatible(manifest, { ...meta, totalFrames: 99 }));
   assert.ok(!manifestCompatible({ ...manifest, finalized: true }, meta));
+});
+
+test('scene digest rejects state changes between checkpoint and resume', () => {
+  assert.equal(MANIFEST_VERSION, 2);
+  const digest = sceneDigest(sampleState);
+  assert.equal(digest, sceneDigest(structuredClone(sampleState)));
+
+  const changedHtml = { ...sampleState, scenes: [{ ...sampleState.scenes[0], html: '<html>changed</html>' }] };
+  const changedBrand = { ...sampleState, brand: { primary: '#000000' } };
+  const changedComponents = { ...sampleState, components: { button: '<b>x</b>' } };
+  const changedDuration = { ...sampleState, scenes: [{ ...sampleState.scenes[0], durationSec: 5 }] };
+  assert.notEqual(digest, sceneDigest(changedHtml));
+  assert.notEqual(digest, sceneDigest(changedBrand));
+  assert.notEqual(digest, sceneDigest(changedComponents));
+  assert.notEqual(digest, sceneDigest(changedDuration));
+
+  const manifest = { ...emptyManifest(meta), finalized: false };
+  assert.ok(manifestCompatible(manifest, { ...meta, digest }));
+  assert.ok(!manifestCompatible(manifest, { ...meta, digest: sceneDigest(changedHtml) }));
 });
 
 test('concat list references each completed segment', () => {
