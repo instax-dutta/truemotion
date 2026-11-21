@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
 import path from 'node:path';
 import { createState, saveState } from '../src/state.js';
 import { resolveSkillDir, installSkill } from '../src/skill.js';
@@ -39,6 +41,7 @@ async function main() {
   const stateFile = opts.state || process.env.TRUEMOTION_STATE_FILE || process.env.OPENMOTION_STATE_FILE || './truemotion-state.json';
 
   if (!command || command === 'help' || command === '--help') return help();
+  if (command === 'version' || command === '--version' || command === '-v') { console.log(JSON.parse(require('node:fs').readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version); return; }
 
   if (command === 'init') {
     const file = opts._[0] || stateFile;
