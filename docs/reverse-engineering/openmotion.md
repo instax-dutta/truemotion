@@ -37,5 +37,7 @@ is copied into this repository. The artefacts were read, not executed.
 
 ## License boundary
 
-The `skill/` Markdown references came from this application and are NOT MIT
-licensed. See [NOTICE.md](../../NOTICE.md).
+The `skill/` Markdown references that originally shipped with this repository
+came from the application and had no published license. They have been replaced
+with original MIT-licensed documentation that preserves the same tool contract
+and scene format. See [NOTICE.md](../../NOTICE.md).

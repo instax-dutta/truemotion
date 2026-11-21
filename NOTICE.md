@@ -11,14 +11,13 @@ written for this project.
 
 ## License of this repository
 
-- Source code in `src/`, `bin/`, `test/` and the demo scripts in `examples/` is
-  MIT licensed. See [LICENSE](LICENSE).
-- The Markdown references in `skill/` were recovered from the OpenMotion
-  application. No license for them has been published by their copyright
-  holder. They are kept in a separate directory, are **not** covered by this
-  repository's MIT grant, and are included for interoperability and reference.
-  Confirm your right to redistribute them before publishing a fork or a package
-  that contains them.
+- All source in `src/`, `bin/`, `test/`, the demo scripts in `examples/` and the
+  reference documents in `skill/` is MIT licensed. See [LICENSE](LICENSE).
+  Every skill document carries an `SPDX-License-Identifier: MIT` header.
+- Earlier releases shipped Markdown recovered from OpenMotion 1.1.0. Those
+  files have been **replaced** with original documentation written for this
+  project. The MCP tool contract and scene format remain compatible, but no
+  recovered prose remains in the repository.
 
 ## Third-party components
 

@@ -40,8 +40,8 @@ npm test
 2. Run `npm test`. For renderer changes, also render a demo and inspect a frame.
 3. Do not add a dependency that requires an account, a paid tier, or a network
    call at render time.
-4. Do not merge `skill/` documentation into MIT-licensed directories. See
-   [NOTICE.md](NOTICE.md).
+4. Keep new `skill/` documents original and MIT licensed, with an SPDX header.
+   See [NOTICE.md](NOTICE.md).
 
 ## Reporting a bad render
 

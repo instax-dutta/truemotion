@@ -147,7 +147,7 @@ scene that breaks a measurement, or a better measurement with a test.
 
 ## Licensing note
 
-The source code in `src/` and `bin/` is MIT licensed (see `LICENSE`). Dependencies keep their own licenses; see [NOTICE.md](NOTICE.md). The files in `skill/` are reference documentation recovered from OpenMotion 1.1.0; their copyright holder has not published a license for them. Confirm your right to redistribute those files before publishing a fork. They are kept separate from the MIT-licensed code for exactly that reason. Bundle versions of GSAP, fonts and Simple Icons are read from the installed npm packages at render time, not copied into this repo.
+All source in `src/`, `bin/` and `test/`, and all reference documents in `skill/`, are MIT licensed (see `LICENSE`). Dependencies keep their own licenses; see [NOTICE.md](NOTICE.md). The original OpenMotion documentation that early versions carried has been replaced with original MIT-licensed material, so the repository is free to redistribute in full. Bundle versions of GSAP, fonts and Simple Icons are read from the installed npm packages at render time, not copied into this repo.
 
 ## Verification
 
