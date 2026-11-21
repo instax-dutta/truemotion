@@ -18,6 +18,8 @@
   temporary names.
 - Trimmed generated media from the npm tarball.
 - Added a reproducible benchmark and recorded measured package/runtime footprint.
+- Replaced `playwright` with `playwright-core` and system-Chrome resolution to
+  remove the browser downloader and shrink the dependency tree.
 
 ## 0.2.0
 

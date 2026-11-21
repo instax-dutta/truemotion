@@ -168,27 +168,22 @@ async function main() {
 
   if (command === 'doctor') {
     const { spawnSync } = await import('node:child_process');
-    const { findSystemChrome, browserOptions } = await import('../src/browser.js');
+    const { findSystemChrome, resolveBrowserPath, CHROME_ENV } = await import('../src/browser.js');
     const checks = [];
     const major = Number(process.versions.node.split('.')[0]);
     checks.push(`node ${process.version}: ${major >= 20 ? 'ok' : 'UNSUPPORTED (20+ required)'}`);
     const ffmpeg = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
     checks.push(`ffmpeg: ${ffmpeg.status === 0 ? 'ok (' + (ffmpeg.stdout || '').split('\n')[0] + ')' : 'MISSING (needed for render)'}`);
-    let pwExecutable = null;
     try {
-      const { chromium } = await import('playwright');
-      pwExecutable = chromium.executablePath();
-      checks.push(`playwright: ok (${pwExecutable})${fs.existsSync(pwExecutable) ? '' : ' - BROWSER NOT DOWNLOADED'}`);
-    } catch { checks.push('playwright: MISSING'); }
+      await import('playwright-core');
+      checks.push('playwright-core: ok (no browser download required)');
+    } catch { checks.push('playwright-core: MISSING'); }
     const systemChrome = findSystemChrome();
     checks.push(`system chrome: ${systemChrome ?? 'none found'}`);
-    const explicit = browserOptions().executablePath;
-    if (explicit) checks.push(`TRUEMOTION_CHROME: ${fs.existsSync(explicit) ? 'ok' : 'PATH DOES NOT EXIST'} (${explicit})`);
-    const chosen = explicit ?? (pwExecutable && fs.existsSync(pwExecutable) ? pwExecutable : null) ?? systemChrome;
-    checks.push(`browser in use: ${chosen ?? 'NONE - run npx playwright install chromium'}`);
-    if (!explicit && !pwExecutable && systemChrome) {
-      checks.push(`hint: export TRUEMOTION_CHROME="${systemChrome}" to use the installed Chrome`);
-    }
+    let resolved = null;
+    try { resolved = resolveBrowserPath(); } catch (e) { checks.push(`browser override: ${e.message}`); }
+    if (process.env[CHROME_ENV]) checks.push(`${CHROME_ENV}: ${process.env[CHROME_ENV]}`);
+    checks.push(`browser in use: ${resolved?.executablePath ?? 'NONE - install Chrome/Chromium or set ' + CHROME_ENV} (${resolved?.source ?? 'none'})`);
     try {
       const dir = resolveSkillDir(opts.skill);
       const { listSkillFiles } = await import('../src/skill.js');

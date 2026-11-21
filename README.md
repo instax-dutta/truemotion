@@ -25,18 +25,20 @@ This project was recovered by reverse engineering **OpenMotion 1.1.0** (`/Applic
 ```bash
 cd truemotion
 npm install
-npx playwright install chromium   # only if Chromium is not already cached
 ```
 
-You need `ffmpeg` on `PATH` only for `render` (preview frames during MCP writes do not use it).
-
-If Chrome or Chromium is already installed, TrueMotion can use it directly and you can skip the Playwright browser download:
+TrueMotion uses `playwright-core` and does **not** download a browser. Install
+Chrome or Chromium on the host, or point it at an existing binary:
 
 ```bash
 export TRUEMOTION_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 # or pass --chrome <path> to render/serve
 truemotion doctor   # reports which browser will be used
 ```
+
+If no browser is found, rendering fails with a clear message rather than
+silently downloading one. You also need `ffmpeg` on `PATH` for `render`
+(preview frames during MCP writes do not use it).
 
 ## Use with any harness
 

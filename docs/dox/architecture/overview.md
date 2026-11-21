@@ -21,7 +21,7 @@ cloud service or model SDK. Every dependency is local.
 | `src/render.js` | Scene probe, frame capture, measurement, parallel rendering, ffmpeg encode. |
 | `src/diff.js` | PNG pixel-diff metrics. |
 | `src/sheet.js` | Contact-sheet composition from frame PNGs. |
-| `src/browser.js` | Playwright launch options and optional system Chrome. |
+| `src/browser.js` | Browser resolution and launch via `playwright-core`; system Chrome first, cached browser as fallback, clear error otherwise. |
 | `src/assets.js` | Standalone ffmpeg image downscale and recompression. |
 | `src/filename.js` | Safe export filenames and output paths. |
 | `src/pathid.js` | DOM path fallback identifiers for unlabelled actors. |
