@@ -192,7 +192,11 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
     const ref = state.sketchRefs.find((r) => r.sceneId === sceneId);
     if (!ref) return error(`No raw sketch found for sceneId "${sceneId}".`);
     if (!assetsDir) return error('No assets directory configured (--assets).');
-    const file = path.resolve(assetsDir, ref.relativePath);
+    const safeRel = String(ref.relativePath ?? '').replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!safeRel || safeRel.includes('..')) return error(`Invalid sketch path: ${ref.relativePath}`);
+    const root = path.resolve(assetsDir);
+    const file = path.resolve(root, safeRel);
+    if (!file.startsWith(root + path.sep)) return error(`Sketch asset escapes assets directory: ${ref.relativePath}`);
     if (!fs.existsSync(file)) return error(`Sketch asset not found: ${file}`);
     return {
       content: [
