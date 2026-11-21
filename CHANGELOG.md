@@ -58,7 +58,7 @@
 - Corrupt or structurally invalid checkpoint manifests are detected and trigger a clean full render, with unit and e2e coverage.
 - Added an opt-in two-minute 1080p end-to-end test that renders a looping-audio film across four segments, interrupts after the first, resumes, and verifies 1200 frames plus A/V alignment and tail fade.
 - Added unit and opt-in CLI coverage that reordering scenes changes the checkpoint digest and is rejected on resume without mutating the manifest.
-- Added opt-in CLI coverage that fps, resolution or segment size changes are rejected on resume with identical state and audio.
+- Added opt-in CLI coverage that fps, resolution or segment size changes are rejected on resume with identical state and audio, and that a changed component definition is likewise rejected.
 - Wired the scene-order and render-setting resume suites into the golden CI job.
 - Added a nightly workflow for the two-minute A/V resume and long-form benchmark, and a tag-gated npm release workflow that verifies the tag against `package.json` before publishing. The nightly writes its Linux report to a separate artifact file instead of overwriting the canonical benchmark docs.
 

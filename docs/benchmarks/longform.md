@@ -101,4 +101,7 @@ and the absence of a final film unchanged. `npm run test:settings-resume`
 (opt-in) covers render-setting changes: fps, resolution and segment size are
 each rejected on resume with "render settings changed since checkpointing"
 while the state and audio stay identical, so a checkpoint cannot be reused with
-incompatible frame geometry.
+incompatible frame geometry. `npm run test:component-resume` covers the same
+guarantee for `components` definitions: changing a component's markup while
+scenes, brand, assets and audio stay identical changes the digest and rejects
+the resume without rewriting the manifest.
