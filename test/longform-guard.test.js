@@ -14,6 +14,15 @@ test('long-form guard script is wired into the nightly workflow', () => {
   assert.equal(pkg.scripts['guard:longform'], 'node scripts/guard-longform.mjs');
 });
 
+test('push CI has a fast sampled long-form guard', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.match(pkg.scripts['guard:smoke'], /GUARD_MIN_FRAMES=160/);
+  assert.match(pkg.scripts['guard:smoke'], /GUARD_MIN_FPS=2/);
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/ci.yml'), 'utf8');
+  assert.ok(workflow.includes('npm run guard:smoke'));
+  assert.ok(workflow.includes('LF_RESOLUTION=540p'));
+});
+
 test('documented thresholds match the guard defaults', () => {
   const guard = fs.readFileSync(path.join(root, 'scripts/guard-longform.mjs'), 'utf8');
   assert.match(guard, /GUARD_MIN_FRAMES \|\| 1200/);

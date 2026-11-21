@@ -60,6 +60,14 @@ GPU pages, so the figure is an upper bound. Frames are streamed to ffmpeg via
 
 ## CI regression guard
 
+Push CI runs a fast sampled variant on every change: a 4-scene, 160-frame,
+540p render (`LF_SCENES=4 LF_RESOLUTION=540p npm run bench:longform`) followed
+by `npm run guard:smoke`, which requires 160 frames, at least 2 fps, peak RSS
+under 1800 MiB and output between 50 and 10000 KiB. Local measurements are
+~9.5 fps, 888 MiB and 278 KiB. This catches gross regressions on every push;
+the nightly job runs the full 1200-frame 1080p version with tighter relative
+thresholds.
+
 The nightly workflow runs `npm run guard:longform` against its Linux report.
 The guard fails the job if the 1200-frame render produces fewer than 1200
 frames, a frame count different from the expected total, throughput below

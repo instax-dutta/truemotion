@@ -49,12 +49,13 @@ function treeRss(rootPid) {
   return total / 1024; // KiB -> MiB
 }
 
-console.log(`Long-form: ${SCENES} scenes x ${SCENE_SEC}s = ${TOTAL_SEC}s, ${FPS} fps, ${EXPECTED} frames, ${BATCH}-frame batches, 1080p`);
+const RESOLUTION = process.env.LF_RESOLUTION || '1080p';
+console.log(`Long-form: ${SCENES} scenes x ${SCENE_SEC}s = ${TOTAL_SEC}s, ${FPS} fps, ${EXPECTED} frames, ${BATCH}-frame batches, ${RESOLUTION}`);
 const started = performance.now();
 const child = spawn(process.execPath, [
   path.join(root, 'bin/truemotion.mjs'), 'render',
   '--state', stateFile, '--out', out,
-  '--resolution', '1080p', '--fps', String(FPS),
+  '--resolution', RESOLUTION, '--fps', String(FPS),
   '--batch-size', String(BATCH), '--concurrency', String(CONCURRENCY)
 ], { cwd: root });
 

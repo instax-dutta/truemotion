@@ -24,6 +24,10 @@ jobs:
       - run: npm test
       - name: Verify publishable tarball
         run: node scripts/verify-tarball.mjs
+      - name: Sampled long-form render and performance guard
+        run: |
+          LF_SCENES=4 LF_CONCURRENCY=2 LF_RESOLUTION=540p LF_REPORT=docs/benchmarks/ci-smoke.md npm run bench:longform
+          npm run guard:smoke
       - name: Validate state schemas (current and legacy)
         run: |
           node bin/truemotion.mjs validate-state --state examples/pro-out/state.json
