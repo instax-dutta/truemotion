@@ -44,6 +44,23 @@ test('manifest persists atomically and detects complete segments by size', () =>
   assert.ok(!fs.existsSync(dir));
 });
 
+test('corrupt or structurally invalid manifests are treated as absent', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-bad-manifest-'));
+  assert.equal(readManifest(dir), null);
+  fs.writeFileSync(manifestPath(dir), '{ truncated json');
+  assert.equal(readManifest(dir), null);
+  fs.writeFileSync(manifestPath(dir), '{}');
+  assert.equal(readManifest(dir), null);
+  fs.writeFileSync(manifestPath(dir), JSON.stringify({ ...emptyManifest(meta), segments: 'nope' }));
+  assert.equal(readManifest(dir), null);
+
+  const good = emptyManifest(meta);
+  good.segments.push({ index: 0, start: 0, count: 40, bytes: 9 });
+  writeManifest(dir, good);
+  assert.ok(readManifest(dir));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('orphan segment files not in the manifest are ignored', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-orphan-'));
   const manifest = emptyManifest(meta);

@@ -84,4 +84,7 @@ asset and path-traversal digests, byte-size verification and segment planning;
 file and an asset file, verifying each rejection. `test/crash-resume.test.js`
 sends SIGKILL to a live render, including during a partially written MPEG-TS
 segment, and verifies the byte-verified manifest discards the orphan file and
-re-encodes that segment on resume.
+re-encodes that segment on resume. A truncated or structurally invalid
+`resume.json` is detected by `readManifest` and treated as absent, so `--resume`
+performs a clean full render rather than muxing a broken checkpoint; this is
+covered by both unit and crash-suite tests.

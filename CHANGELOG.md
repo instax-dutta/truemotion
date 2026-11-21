@@ -55,6 +55,7 @@
 - Added a real-browser e2e test verifying the injected CSP blocks external network requests while the scene timeline still runs.
 - Added MCP-level tests that a newer state schema is rejected across tools, that edited skill files are re-read despite a populated cache, and that rejected writes leave the state file byte-identical.
 - Partial render progress now reports the total frames of the selected time range instead of the whole timeline.
+- Corrupt or structurally invalid checkpoint manifests are detected and trigger a clean full render, with unit and e2e coverage.
 
 ## 0.2.0
 

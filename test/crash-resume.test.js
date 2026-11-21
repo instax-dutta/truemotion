@@ -129,3 +129,46 @@ test('SIGKILL during a partial MPEG-TS write discards the orphan on resume', { s
     'the orphan file must be re-encoded to its verified size');
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('corrupt checkpoint manifest triggers a clean full render', { skip: !enabled && 'set TRUEMOTION_CRASH=1' }, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-corrupt-manifest-'));
+  const bin = path.resolve('bin/truemotion.mjs');
+  const stateFile = path.join(dir, 'state.json');
+  const out = path.join(dir, 'film.mp4');
+  const source = JSON.parse(fs.readFileSync('examples/pro-out/state.json', 'utf8'));
+  fs.writeFileSync(stateFile, JSON.stringify({
+    ...source,
+    scenes: [{ ...source.scenes[0], durationSec: 4 }]
+  }));
+
+  const args = [
+    bin, 'render', '--state', stateFile, '--out', out,
+    '--resolution', '540p', '--fps', '10', '--batch-size', '4',
+    '--segment-size', '10', '--keep-checkpoints'
+  ];
+  const partial = spawnSync(process.execPath, [...args, '--max-segments', '1'], { encoding: 'utf8' });
+  assert.equal(partial.status, 0, partial.stderr.slice(-800));
+  assert.ok(partial.stdout.includes('Checkpoint'));
+
+  const manifestFile = `${out}.segments/resume.json`;
+  fs.writeFileSync(manifestFile, '{ truncated json');
+  const resumed = spawnSync(process.execPath, [...args, '--resume'], { encoding: 'utf8' });
+  assert.equal(resumed.status, 0, resumed.stderr.slice(-800));
+  assert.ok(fs.existsSync(out));
+  assert.equal(probeFrames(out), 40);
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  assert.ok(manifest.finalized, 'corrupt checkpoint must be replaced with a completed manifest');
+  assert.equal(manifest.segments.length, 4);
+
+  // A structurally valid but incomplete manifest must also be discarded.
+  const second = path.join(dir, 'second.mp4');
+  const secondArgs = [...args, '--out', second];
+  const first = spawnSync(process.execPath, [...secondArgs, '--max-segments', '1'], { encoding: 'utf8' });
+  assert.equal(first.status, 0);
+  fs.writeFileSync(`${second}.segments/resume.json`, '{}');
+  const secondResume = spawnSync(process.execPath, [...secondArgs, '--resume'], { encoding: 'utf8' });
+  assert.equal(secondResume.status, 0, secondResume.stderr.slice(-800));
+  assert.equal(probeFrames(second), 40);
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});

@@ -70,7 +70,14 @@ export function emptyManifest(meta) {
 export function readManifest(dir) {
   const file = manifestPath(dir);
   if (!fs.existsSync(file)) return null;
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const valid = parsed && parsed.version === MANIFEST_VERSION &&
+      Array.isArray(parsed.segments) &&
+      Number.isFinite(parsed.fps) && Number.isFinite(parsed.totalFrames) &&
+      Number.isFinite(parsed.segmentSize);
+    return valid ? parsed : null;
+  } catch { return null; }
 }
 
 export function writeManifest(dir, manifest) {
