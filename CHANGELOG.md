@@ -61,7 +61,7 @@
 - Added opt-in CLI coverage that fps, resolution or segment size changes are rejected on resume with identical state and audio, and that changed built-in or custom component definitions and brand values are likewise rejected.
 - Wired the scene-order and render-setting resume suites into the golden CI job.
 - Added a nightly workflow for the two-minute A/V resume and long-form benchmark, and a tag-gated npm release workflow that verifies the tag against `package.json` before publishing. The nightly writes its Linux report to a separate artifact file instead of overwriting the canonical benchmark docs.
-- Fixed lost updates under concurrent MCP writes by serialising state mutations with a cross-process lock; long renders read state without holding the lock. Added unit and opt-in multi-client e2e coverage.
+- Fixed lost updates under concurrent MCP writes by serialising state mutations with a cross-process lock; long renders read state without holding the lock. Added unit and opt-in multi-client e2e coverage, plus lock timeout, stale-lock recovery and exception-release tests.
 
 ## 0.2.0
 

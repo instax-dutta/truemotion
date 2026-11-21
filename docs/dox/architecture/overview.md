@@ -33,7 +33,10 @@ cloud service or model SDK. Every dependency is local.
 
 State JSON is loaded and normalised. All MCP state mutations are serialised by
 a cross-process lock file, so concurrent harnesses cannot lose updates; long
-renders read state without holding the lock. Agents mutate scenes through MCP tools.
+renders read state without holding the lock. The lock has a configurable
+acquisition timeout and treats abandoned locks older than the stale threshold
+as recoverable, so a crashed writer cannot block all future writes. Agents
+mutate scenes through MCP tools.
 Each write is validated and returns rendered checkpoints. Rendering injects
 tokens into the scene HTML, opens it in headless Chromium, seeks the single GSAP
 timeline to each frame time, and pipes PNG bytes directly into ffmpeg's stdin.
