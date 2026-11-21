@@ -193,8 +193,13 @@ CI runs a pinned-Chromium golden-frame regression job plus the MCP end-to-end,
 crash-resume, audio-resume, CSP, schema, scene-order and render-setting suites.
 The fixtures are font-free geometric scenes rendered at 540p, so they stay
 stable across hosts; set `TRUEMOTION_GOLDEN=1` to run that test locally. The
-multi-minute A/V resume test (`npm run test:long-av`) stays opt-in outside CI
-because it takes about 3.5 minutes.
+multi-minute A/V resume test (`npm run test:long-av`) is too slow for every
+push, so it runs nightly (and on demand) in `.github/workflows/nightly.yml`
+alongside the full long-form benchmark. Publishing is automated only on a `v*`
+tag via `.github/workflows/release.yml`, which verifies the tag matches
+`package.json`, runs the test suite and publishes with provenance using the
+`NPM_TOKEN` repository secret. Until that secret is configured and a tag is
+pushed, the package is not published to npm.
 
 Measured footprint and frame rates on one machine are recorded in
 [docs/benchmarks/latest.md](docs/benchmarks/latest.md). The organisation-scale

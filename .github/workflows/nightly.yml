@@ -1,0 +1,33 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  long-av:
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: npm ci
+      - name: Install pinned Chromium
+        run: node node_modules/playwright-core/cli.js install chromium
+      - name: Two-minute 1080p multi-segment A/V resume
+        run: npm run test:long-av
+      - name: Full page-pool long-form benchmark
+        run: npm run bench:longform
+      - name: Upload benchmark reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-benchmarks
+          path: docs/benchmarks/

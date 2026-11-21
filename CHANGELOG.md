@@ -59,7 +59,8 @@
 - Added an opt-in two-minute 1080p end-to-end test that renders a looping-audio film across four segments, interrupts after the first, resumes, and verifies 1200 frames plus A/V alignment and tail fade.
 - Added unit and opt-in CLI coverage that reordering scenes changes the checkpoint digest and is rejected on resume without mutating the manifest.
 - Added opt-in CLI coverage that fps, resolution or segment size changes are rejected on resume with identical state and audio.
-- Wired the scene-order and render-setting resume suites into the golden CI job; the two-minute A/V resume test remains opt-in.
+- Wired the scene-order and render-setting resume suites into the golden CI job.
+- Added a nightly workflow for the two-minute A/V resume and long-form benchmark, and a tag-gated npm release workflow that verifies the tag against `package.json` before publishing.
 
 ## 0.2.0
 
