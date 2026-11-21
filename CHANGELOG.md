@@ -30,6 +30,8 @@
   golden-frame coverage.
 - Added a standalone `{{SHADERS}}` CSS utility layer with unit and golden-frame
   coverage.
+- Added state-driven `{{BRAND:*}}` tokens with CSS variables and inlined logo,
+  with unit and golden-frame coverage.
 
 ## 0.2.0
 

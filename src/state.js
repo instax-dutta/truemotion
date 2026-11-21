@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { frameBackground } from './validate.js';
+import { DEFAULT_BRAND, normalizeBrand } from './brand.js';
 
 export const ASPECTS = {
   '16:9': [1920, 1080],
@@ -24,11 +25,12 @@ export function dimensions(aspect, resolution = '1080p') {
   return [Math.round(width * scale), Math.round(height * scale)];
 }
 
-export function createState({ aspect = '16:9', resolution = '1080p', projectId = 'default' } = {}) {
+export function createState({ aspect = '16:9', resolution = '1080p', projectId = 'default', brand = DEFAULT_BRAND } = {}) {
   return {
     projectId,
     aspect,
     resolution,
+    brand: normalizeBrand(brand),
     scenes: [],
     sketchRefs: [],
     skillReadCache: {},
@@ -56,6 +58,7 @@ export function normalizeState(raw) {
     ...raw,
     aspect,
     resolution,
+    brand: normalizeBrand(raw.brand),
     scenes,
     sketchRefs: Array.isArray(raw.sketchRefs) ? raw.sketchRefs : [],
     skillReadCache: raw.skillReadCache && typeof raw.skillReadCache === 'object' ? raw.skillReadCache : {},

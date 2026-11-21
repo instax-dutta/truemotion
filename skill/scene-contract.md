@@ -57,6 +57,7 @@ A static validator rejects a document that lacks `.frame`,
 | `{{ROUGH}}` | A local hand-drawn SVG helper on `window.OMRough`. See `blocks/rough.md`. |
 | `{{FX}}` | A local inline-CSS effects helper on `window.OMFX`. See `blocks/fx.md`. |
 | `{{SHADERS}}` | A local CSS utility layer on `window.OMShaders`. See `blocks/shaders.md`. |
+| `{{BRAND:key}}` | A value from the state file's `brand` object, also exposed as `--brand-key`. See `blocks/brand.md`. |
 
 An HTML comment containing `{{GSAP}}` works, but a bare token is clearer.
 

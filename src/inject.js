@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { ROUGH_SOURCE } from './rough.js';
 import { FX_SOURCE } from './fx.js';
 import { SHADERS_SOURCE } from './shaders.js';
+import { brandCss, brandValue, brandLogoDataUrl } from './brand.js';
 
 const require = createRequire(import.meta.url);
 
@@ -133,9 +134,16 @@ function injectBeforeFirstScript(html, block) {
   return html.slice(0, i) + block + '\n' + html.slice(i);
 }
 
-export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
+export function injectSceneHtml(html, { width, height, assetsDir, brand } = {}) {
   let out = String(html).replaceAll('{{W}}', String(width)).replaceAll('{{H}}', String(height));
   out = injectFonts(out, getFontsCss());
+
+  const brandBlock = `<style>${brandCss(brand)}</style>`;
+  out = /<head[^>]*>/i.test(out)
+    ? out.replace(/<head([^>]*)>/i, (_match, attrs) => `<head${attrs}>${brandBlock}`)
+    : brandBlock + out;
+  out = out.replace(/\{\{BRAND:logo\}\}/g, () => brandLogoDataUrl(brand, assetsDir));
+  out = out.replace(/\{\{BRAND:([^}]+)\}\}/g, (_match, key) => brandValue(brand, key.trim()));
 
   // Keep scenes self-contained: no network, no external assets, no eval.
   const CSP = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; media-src data: blob:; connect-src 'none';">`;
@@ -167,9 +175,9 @@ export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
   out = out.replace(/\{\{ICON:([^}]+)\}\}/g, (_m, spec) => iconDataUrl(spec.trim()));
   out = out.replace(/\{\{ASSET:([^}]+)\}\}/g, (_m, rel) => assetDataUrl(rel.trim(), assetsDir));
 
-  const unsupported = [...out.matchAll(/\{\{(THREE|BRAND:[^}]+|COMPONENT:[^}]+)\}\}/g)].map((m) => m[1]);
+  const unsupported = [...out.matchAll(/\{\{(THREE|COMPONENT:[^}]+)\}\}/g)].map((m) => m[1]);
   if (unsupported.length) {
-    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}}, {{ASSET:...}}, {{ROUGH}}, {{FX}} and {{SHADERS}}.`);
+    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}}, {{ASSET:...}}, {{ROUGH}}, {{FX}}, {{SHADERS}} and {{BRAND:*}}.`);
   }
   return out;
 }

@@ -37,12 +37,12 @@ export function chunkTimes(count, concurrency) {
   return groups;
 }
 
-async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, chrome } = {}, existingBrowser) {
+async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, brand, chrome } = {}, existingBrowser) {
   // Keep the CSS composition at source size so fixed-pixel layouts do not
   // reflow; scale only the raster via deviceScaleFactor.
   const [width, height] = dimensions(aspect, '1080p');
   const [outputWidth] = dimensions(aspect, resolution);
-  const injected = injectSceneHtml(html, { width, height, assetsDir });
+  const injected = injectSceneHtml(html, { width, height, assetsDir, brand });
   const browser = existingBrowser ?? await launchBrowser(chrome);
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: outputWidth / width });
   const requests = new Set();
@@ -116,8 +116,8 @@ async function layoutIssues(page, width, height) {
   }, { width, height });
 }
 
-async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, chrome, actorTimeSec } = {}) {
-  const ctx = await openScene(html, { aspect, resolution, assetsDir, chrome });
+async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, brand, chrome, actorTimeSec } = {}) {
+  const ctx = await openScene(html, { aspect, resolution, assetsDir, brand, chrome });
   try {
     const info = await ctx.page.evaluate(() => ({
       duration: window.__SCENE_DURATION__,
@@ -179,15 +179,15 @@ async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSe
   }
 }
 
-export async function renderFrames(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, chrome } = {}) {
-  const result = await probeScene(html, { aspect, resolution, timesSec, assetsDir, chrome });
+export async function renderFrames(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, brand, chrome } = {}) {
+  const result = await probeScene(html, { aspect, resolution, timesSec, assetsDir, brand, chrome });
   return result.frames;
 }
 
-async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, concurrency }) {
+async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, brand, concurrency }) {
   const count = Math.min(Math.max(1, concurrency), Math.max(1, timesSec.length));
   const pages = await Promise.all(
-    Array.from({ length: count }, () => openScene(html, { aspect, resolution, assetsDir }, browser))
+    Array.from({ length: count }, () => openScene(html, { aspect, resolution, assetsDir, brand }, browser))
   );
   try {
     const groups = chunkTimes(timesSec.length, count);
@@ -210,7 +210,7 @@ export async function sceneNotes(scene, state, { assetsDir, chrome } = {}) {
   const duration = scene.durationSec;
   const times = [duration * 0.1, duration * 0.5, duration * 0.9];
   try {
-    const probe = await probeScene(scene.html, { aspect: state.aspect, resolution: state.resolution, timesSec: times, assetsDir, chrome });
+    const probe = await probeScene(scene.html, { aspect: state.aspect, resolution: state.resolution, timesSec: times, assetsDir, brand: state.brand, chrome });
     const notes = [];
     const [a, b, c] = probe.frames;
     if (a && b && c) {
@@ -257,6 +257,7 @@ export async function actorExitStates(scene, state, { assetsDir, chrome } = {}) 
     chrome,
     timesSec: [],
     assetsDir,
+    brand: state.brand,
     actorTimeSec: scene.durationSec
   });
   return probe.actors ?? [];
@@ -265,8 +266,8 @@ export async function actorExitStates(scene, state, { assetsDir, chrome } = {}) 
 export async function matchedCut(previous, candidate, state, { assetsDir, chrome } = {}) {
   try {
     const [prev, next] = await Promise.all([
-      probeScene(previous.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [previous.durationSec], assetsDir, chrome }),
-      probeScene(candidate.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [0], assetsDir, chrome })
+      probeScene(previous.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [previous.durationSec], assetsDir, brand: state.brand, chrome }),
+      probeScene(candidate.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [0], assetsDir, brand: state.brand, chrome })
     ]);
     const diff = diffPng(prev.frames[0].base64Png, next.frames[0].base64Png);
     return {
@@ -297,7 +298,7 @@ export async function renderVideo(state, outPath, { fps = 30, resolution, assets
       const scene = state.scenes[sceneIndex];
       const frames = await renderFramesParallel(browser, scene.html, {
         aspect: state.aspect, resolution: outputResolution,
-        timesSec: framesToRender.map((f) => f.time), assetsDir, concurrency
+        timesSec: framesToRender.map((f) => f.time), assetsDir, brand: state.brand, concurrency
       });
       for (const frame of frames) {
         index += 1;

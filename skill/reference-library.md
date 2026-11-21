@@ -22,6 +22,7 @@ hard cuts belong.
 - [Hand-drawn shapes](blocks/rough.md) covers the `{{ROUGH}}` token.
 - [Local effects](blocks/fx.md) covers the `{{FX}}` token.
 - [Shader-style utilities](blocks/shaders.md) covers the `{{SHADERS}}` token.
+- [Brand tokens](blocks/brand.md) covers the `{{BRAND:*}}` tokens.
 
 ## Worked examples
 

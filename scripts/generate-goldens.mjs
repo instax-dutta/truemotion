@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { renderFrames } from '../src/render.js';
-import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES, SHADERS_HTML, SHADERS_TIMES } from '../test/fixtures/golden-scene.mjs';
+import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES, SHADERS_HTML, SHADERS_TIMES, BRAND_HTML, BRAND_TIMES, BRAND } from '../test/fixtures/golden-scene.mjs';
 
 const require = createRequire(import.meta.url);
 process.env.TRUEMOTION_CHROME = require('playwright-core').chromium.executablePath();
@@ -19,12 +19,13 @@ const sets = [
   { prefix: 'frame', html: GOLDEN_HTML, times: GOLDEN_TIMES },
   { prefix: 'rough', html: ROUGH_HTML, times: ROUGH_TIMES },
   { prefix: 'fx', html: FX_HTML, times: FX_TIMES },
-  { prefix: 'shaders', html: SHADERS_HTML, times: SHADERS_TIMES }
+  { prefix: 'shaders', html: SHADERS_HTML, times: SHADERS_TIMES },
+  { prefix: 'brand', html: BRAND_HTML, times: BRAND_TIMES, brand: BRAND }
 ];
 
 for (const set of sets) {
   const frames = await renderFrames(set.html, {
-    aspect: '16:9', resolution: '540p', timesSec: set.times
+    aspect: '16:9', resolution: '540p', timesSec: set.times, brand: set.brand
   });
   for (const [index, frame] of frames.entries()) {
     const buffer = Buffer.from(frame.base64Png, 'base64');
