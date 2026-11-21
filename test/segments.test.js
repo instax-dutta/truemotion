@@ -132,6 +132,12 @@ test('audio path and content changes reject a resume', () => {
     'different audio content at the same path must be rejected');
   assert.equal(fileDigest(bedA), fileDigest(bedA));
   assert.notEqual(fileDigest(bedA), fileDigest(bedB));
+
+  // Same byte length, different content: size alone would miss this.
+  fs.writeFileSync(bedA, 'audio C');
+  assert.equal(fs.statSync(bedA).size, 7);
+  assert.ok(!manifestCompatible(manifest, { ...base, audioDigest: fileDigest(bedA) }),
+    'same-size audio corruption must be rejected');
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

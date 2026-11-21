@@ -94,5 +94,16 @@ test('multi-segment render with looping audio resumes with aligned A/V and tail 
   assert.notEqual(contentChanged.status, 0, 'different audio content at the same path must be rejected');
   assert.ok(contentChanged.stderr.includes('audio bed changed'), contentChanged.stderr.slice(-500));
 
+  // Same-size corruption of the original bed must also be detected by digest.
+  const bedBefore = fs.readFileSync(bed);
+  const corrupted = Buffer.from(bedBefore);
+  corrupted[Math.floor(corrupted.length / 2)] ^= 0xff;
+  assert.equal(corrupted.length, bedBefore.length);
+  fs.writeFileSync(bed, corrupted);
+  const sameSizeChanged = spawnSync(process.execPath, [...args, '--resume'], { encoding: 'utf8' });
+  assert.notEqual(sameSizeChanged.status, 0, 'same-size audio corruption must be rejected');
+  assert.ok(sameSizeChanged.stderr.includes('audio bed changed'), sameSizeChanged.stderr.slice(-500));
+  assert.ok(fs.existsSync(out), 'the already-final film must remain untouched after rejected resumes');
+
   fs.rmSync(dir, { recursive: true, force: true });
 });

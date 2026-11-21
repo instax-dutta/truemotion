@@ -21,7 +21,7 @@ A 3-second audio bed is looped under a 120-second video. Drift is the absolute d
 
 `test/audio-resume.test.js` (`npm run test:audio-resume`, also in CI) covers the harder combined case: a two-segment film with a looping bed is rendered partially, resumed from its checkpoint, then checked for exact frame count, audio/video duration alignment within 50 ms, and a tail fade at least 3 dB below the mid-film level. This verifies that concatenation of independently encoded MPEG-TS segments does not disturb audio timing or the final fade.
 
-The checkpoint manifest also stores a SHA-256 digest of the audio bed. Changing the bed path, or replacing the file at the same path, between a partial render and a resume fails with "the audio bed changed since checkpointing" rather than silently muxing the wrong audio into the concatenated film. Both cases are covered by the same test.
+The checkpoint manifest also stores a SHA-256 digest of the audio bed. Changing the bed path, or replacing the file at the same path, between a partial render and a resume fails with "the audio bed changed since checkpointing" rather than silently muxing the wrong audio into the concatenated film. The same test also flips a byte in the bed while preserving its length, verifying the SHA-256 digest catches same-size corruption, and confirms an already-finalized film is left untouched by rejected resumes.
 
 For the full-scale combination, `npm run test:long-av` (`TRUEMOTION_LONG_AV=1`,
 opt-in because it takes about 3.5 minutes) renders a two-minute 1080p film with

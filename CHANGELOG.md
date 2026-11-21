@@ -63,7 +63,7 @@
 - Added a nightly workflow for the two-minute A/V resume and long-form benchmark, and a tag-gated npm release workflow that verifies the tag against `package.json` before publishing. The nightly writes its Linux report to a separate artifact file instead of overwriting the canonical benchmark docs.
 - Fixed lost updates under concurrent MCP writes by serialising state mutations with a cross-process lock; long renders read state without holding the lock. Added unit and opt-in multi-client e2e coverage, plus lock timeout, stale-lock recovery and exception-release tests. A sustained 20-writer x 3-round contention test verifies no timeouts, lost writes or stray lock/temp files.
 - Added a prepack gate that runs tests and verifies tarball contents (required files present, no media/env/deps, size bound) so publication cannot ship broken or bloated packages.
-- Added per-segment SHA-256 digests to checkpoint manifests so same-size segment corruption is detected and re-encoded; re-encoded segments replace their manifest entry and finalization refuses duplicate indices.
+- Added per-segment SHA-256 digests to checkpoint manifests so same-size segment corruption is detected and re-encoded; re-encoded segments replace their manifest entry and finalization refuses duplicate indices. Audio-bed resume validation now also covers same-size corruption and confirms rejected resumes leave finalized films untouched.
 - Added a nightly performance/memory regression guard for the 1200-frame long-form render with documented fps, RSS and output-size thresholds, calibrated from real nightly runs, plus a fast 160-frame 540p smoke guard on every push CI run.
 
 ## 0.2.0
