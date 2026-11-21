@@ -50,6 +50,7 @@
     "demo:pro": "node examples/pro-demo.mjs",
     "selftest": "node bin/truemotion.mjs selftest",
     "benchmark": "node scripts/benchmark.mjs",
+    "goldens": "node scripts/generate-goldens.mjs",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {

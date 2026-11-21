@@ -22,3 +22,22 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - run: npm ci
       - run: npm test
+
+  golden:
+    runs-on: ubuntu-latest
+    env:
+      TRUEMOTION_GOLDEN: '1'
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: npm ci
+      - name: Install pinned Chromium
+        run: node node_modules/playwright-core/cli.js install chromium
+      - name: Run golden-frame regression
+        run: npm test

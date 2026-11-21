@@ -23,6 +23,7 @@
 - Replaced the 26 MiB `simple-icons` runtime dependency with Iconify's CC0 path
   data and a 69 KiB generated colour map, preserving `{{ICON:slug}}` tokens.
 - Added a formal reverse-engineering audit with status and evidence per finding.
+- Added pinned-Chromium golden-frame regression coverage in CI.
 
 ## 0.2.0
 

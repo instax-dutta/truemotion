@@ -1,0 +1,27 @@
+// Regenerate golden render fixtures with the browser version pinned by
+// playwright-core in package-lock.json. Run: npm run goldens
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { renderFrames } from '../src/render.js';
+import { GOLDEN_HTML, GOLDEN_TIMES } from '../test/fixtures/golden-scene.mjs';
+
+const require = createRequire(import.meta.url);
+process.env.TRUEMOTION_CHROME = require('playwright-core').chromium.executablePath();
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const outDir = path.join(root, 'test/fixtures/golden');
+fs.mkdirSync(outDir, { recursive: true });
+
+const frames = await renderFrames(GOLDEN_HTML, {
+  aspect: '16:9', resolution: '540p', timesSec: GOLDEN_TIMES
+});
+
+for (const [index, frame] of frames.entries()) {
+  const buffer = Buffer.from(frame.base64Png, 'base64');
+  const file = path.join(outDir, `frame-${index}.png`);
+  fs.writeFileSync(file, buffer);
+  console.log(`${path.basename(file)} ${createHash('sha256').update(buffer).digest('hex').slice(0, 16)} ${buffer.length} bytes`);
+}

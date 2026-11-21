@@ -171,7 +171,12 @@ npm test
 npm run selftest
 npm pack --dry-run
 npm run benchmark -- --write   # records docs/benchmarks/latest.md
+npm run goldens                # regenerate pinned golden frames after renderer changes
 ```
+
+CI runs a pinned-Chromium golden-frame regression job. The fixtures are
+font-free geometric scenes rendered at 540p, so they stay stable across hosts;
+set `TRUEMOTION_GOLDEN=1` to run that test locally.
 
 Measured footprint and frame rates on one machine are recorded in
 [docs/benchmarks/latest.md](docs/benchmarks/latest.md). Run the benchmark on
