@@ -7,7 +7,7 @@ import {
   loadState, saveState, sceneMetadata, addScene, patchScene, updateScene, sceneDigest
 } from './state.js';
 import { validateSceneHtml, evolveGuide, evolveWarnings } from './validate.js';
-import { readSkill } from './skill.js';
+import { readSkill, listSkillFiles } from './skill.js';
 import { sceneNotes, actorExitStates, matchedCut, renderVideo } from './render.js';
 import { makeContactSheet } from './sheet.js';
 import { optimizeAssetsInDir } from './assets.js';
@@ -238,6 +238,11 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
     }
     return { content: blocks };
   }));
+
+  server.registerTool('list_skills', {
+    description: 'List the motion reference documents available through read_skill.',
+    inputSchema: z.object({})
+  }, async () => withState(async () => text(JSON.stringify(listSkillFiles(skillDir)))));
 
   server.registerTool('render_video', {
     description: 'Render the current timeline to an MP4 on disk. Use after review_timeline reports no issues. Long-running but keeps the agent fully standalone.',

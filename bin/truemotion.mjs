@@ -157,7 +157,8 @@ async function main() {
       await call('read_scene', { sceneId: persisted[0].id, purpose: 'digest' });
       await call('patch_scene', { id: persisted[0].id, ops: [{ find: '>Self test<', replace: '>Self test ok<' }] });
       await call('read_skill', { file: 'SKILL.md' });
-      console.log('selftest: PASS (5 tools, state persisted)');
+      await call('list_skills', {});
+      console.log('selftest: PASS (6 tools, state persisted)');
     } finally {
       await client.close();
       fs.rmSync(dir, { recursive: true, force: true });

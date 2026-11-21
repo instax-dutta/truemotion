@@ -45,6 +45,9 @@ Trust the measurements from `review_timeline` over your own reading of the code.
 
 ## References
 
+Call `list_skills` through MCP to see the current reference set; load any file
+with `read_skill`.
+
 - [scene-contract.md](scene-contract.md) - required HTML shape and tokens.
 - [motion-rules.md](motion-rules.md) - timing, easing, depth, anti-patterns.
 - [typography.md](typography.md) - type roles and minimum sizes.

@@ -15,7 +15,7 @@ This project was recovered by reverse engineering **OpenMotion 1.1.0** (`/Applic
 
 ## What you get
 
-- Nine MCP tools: `get_scenes`, `read_scene`, `update_scene`, `patch_scene`, `add_scene`, `read_skill`, `view_sketch`, `review_timeline`, `render_video`. An agent can author, audit and render a film without shell access.
+- Eleven MCP tools: `get_scenes`, `read_scene`, `update_scene`, `patch_scene`, `add_scene`, `read_skill`, `list_skills`, `view_sketch`, `review_timeline`, `render_video`, `optimize_assets`. An agent can author, audit, optimise assets and render a film without shell access.
 - Scene format: one self-contained HTML document per scene with a single paused GSAP timeline on `window.__SCENE_TIMELINE__`. Injection tokens `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`, `{{ASSET:...}}` and the `OMTyping` runtime are resolved locally.
 - Contract validation (including a static seek-safety lint that rejects `from()`, external scripts or URLs, timers, `requestAnimationFrame`, CSS keyframes and transitions), evolve/digest reads, and rendered frame feedback after each write. Feedback is measured, not decorative: pixel-diff ratios for static slides and dead holds, duration/timeline mismatches, external requests, script errors, clipped actors and text under 18px. Evolved scenes get measured actor exit states, and a visible jump at an evolved cut is rejected with the two frames attached.
 - Rendering: Playwright seeks the timeline frame-by-frame, ffmpeg encodes the frames to MP4. No cloud service involved. Seeks fire GSAP `onUpdate` callbacks, so proxy-driven counters and typed text export correctly on a cold seek.
