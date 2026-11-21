@@ -96,6 +96,15 @@ test('injection resolves tokens and rejects unsupported ones', () => {
   assert.throws(() => injectSceneHtml('{{THREE}}', { width: 1, height: 1 }), /Unsupported/);
 });
 
+test('icon tokens resolve locally with brand and mono colours', () => {
+  const out = injectSceneHtml('<img src="{{ICON:notion}}"><img src="{{ICON:notion/mono}}"><img src="{{ICON:twitter}}">', { width: 100, height: 100 });
+  const urls = [...out.matchAll(/data:image\/svg\+xml;base64,([A-Za-z0-9+/=]+)/g)].map((m) => Buffer.from(m[1], 'base64').toString());
+  assert.equal(urls.length, 3);
+  assert.ok(urls[0].includes('#000000'));
+  assert.ok(urls[1].includes('#ffffff'));
+  assert.ok(urls[2].includes('<path'));
+});
+
 test('contact sheet tiles frames into one PNG', () => {
   const png = new PNG({ width: 40, height: 20 });
   png.data.fill(80);

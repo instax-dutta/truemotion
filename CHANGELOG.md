@@ -20,6 +20,9 @@
 - Added a reproducible benchmark and recorded measured package/runtime footprint.
 - Replaced `playwright` with `playwright-core` and system-Chrome resolution to
   remove the browser downloader and shrink the dependency tree.
+- Replaced the 26 MiB `simple-icons` runtime dependency with Iconify's CC0 path
+  data and a 69 KiB generated colour map, preserving `{{ICON:slug}}` tokens.
+- Added a formal reverse-engineering audit with status and evidence per finding.
 
 ## 0.2.0
 

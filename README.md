@@ -152,6 +152,9 @@ Full documentation lives in [`docs/dox/`](docs/dox/): getting-started, architect
 
 ## Contributing
 
+The formal reverse-engineering audit, including rejected findings and their
+rationale, is in [docs/reverse-engineering/audit.md](docs/reverse-engineering/audit.md).
+
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and
 ideas, [NOTICE.md](NOTICE.md) for provenance and third-party licenses, and
 [CHANGELOG.md](CHANGELOG.md) for the release history. The most useful help is a

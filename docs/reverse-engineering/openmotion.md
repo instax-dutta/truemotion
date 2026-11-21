@@ -1,5 +1,7 @@
 # Reverse-engineering notes: OpenMotion 1.1.0
 
+The formal status of each finding is tracked in [audit.md](audit.md).
+
 These notes record what was learned from static inspection of
 `/Applications/OpenMotion.app` and what TrueMotion adopted. No proprietary code
 is copied into this repository. The artefacts were read, not executed.

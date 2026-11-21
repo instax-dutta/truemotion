@@ -31,9 +31,13 @@ licenses govern their use:
 | `zod` | MIT |
 | `playwright` | Apache-2.0 |
 | `pngjs` | MIT |
-| `simple-icons` | CC0-1.0 |
+| `@iconify-json/simple-icons` | CC0-1.0 |
 | `@fontsource/archivo`, `@fontsource/jetbrains-mono` | SIL OFL 1.1 |
 | `ffmpeg` (external executable used by `render`) | LGPL/GPL depending on build |
+
+`src/icon-colors.json` is a generated 69 KiB map of icon slug to brand hex,
+derived from the CC0-1.0 simple-icons dataset. It records the upstream source
+and license here rather than implying an MIT grant over that data.
 
 Remotion is deliberately **not** used. It has a two-tier license that requires a
 company license for larger organisations.

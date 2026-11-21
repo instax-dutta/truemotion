@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import * as simpleIcons from 'simple-icons';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 
 let gsapSource;
 let fontsCss;
-let iconMap;
+let iconifyData;
+let iconColors;
 
 export function getGsapSource() {
   if (gsapSource === undefined) {
@@ -32,25 +32,29 @@ export function getFontsCss() {
   return fontsCss;
 }
 
-function getIconMap() {
-  if (!iconMap) {
-    iconMap = new Map();
-    for (const icon of Object.values(simpleIcons)) {
-      if (icon?.slug && icon?.path) iconMap.set(icon.slug, icon);
-    }
+function getIconifyData() {
+  if (!iconifyData) {
+    iconifyData = JSON.parse(fs.readFileSync(require.resolve('@iconify-json/simple-icons/icons.json'), 'utf8'));
   }
-  return iconMap;
+  return iconifyData;
 }
 
 const ICON_ALIASES = { sheets: 'googlesheets', mail: 'gmail', twitter: 'x' };
 
 function iconDataUrl(spec) {
   const [slugPart, variant, hex] = spec.split('/');
-  const slug = ICON_ALIASES[slugPart] ?? slugPart;
-  const icon = getIconMap().get(slug);
+  let slug = ICON_ALIASES[slugPart] ?? slugPart;
+  const data = getIconifyData();
+  let icon = data.icons[slug];
+  if (!icon && data.aliases?.[slug]) {
+    slug = data.aliases[slug].parent ?? slug;
+    icon = data.icons[slug];
+  }
   if (!icon) return '';
-  const fill = variant === 'mono' ? `#${(hex ?? 'ffffff').replace(/^#/, '')}` : `#${icon.hex}`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}"><path d="${icon.path}"/></svg>`;
+  if (!iconColors) iconColors = require('./icon-colors.json');
+  const fill = variant === 'mono' ? `#${(hex ?? 'ffffff').replace(/^#/, '')}` : `#${iconColors[slug] ?? '111111'}`;
+  const body = String(icon.body).replace(/currentColor/g, fill);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${body}</svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
