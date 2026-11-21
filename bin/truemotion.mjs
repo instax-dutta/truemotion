@@ -33,6 +33,7 @@ Usage:
   truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--concurrency 2] [--start 4 --end 8] [--audio <file>] [--assets <dir>] [--chrome <path>]
   truemotion serve --state <state.json> [--chrome <path>]        # reuses system Chrome if set
   truemotion still --state <state.json> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]
+  truemotion optimize-assets <dir> [--max-dimension 2200] [--min-bytes 921600]
   truemotion install-skill <target-dir>
   truemotion doctor
   truemotion selftest
@@ -104,6 +105,20 @@ async function main() {
     fs.mkdirSync(path.dirname(path.resolve(opts.out)), { recursive: true });
     fs.writeFileSync(opts.out, Buffer.from(frame.base64Png, 'base64'));
     console.log(`Wrote ${path.resolve(opts.out)} at ${opts.time || 0}s from scene ${scene.name}`);
+    return;
+  }
+
+  if (command === 'optimize-assets') {
+    const { optimizeAssetsInDir } = await import('../src/assets.js');
+    const target = opts._[0];
+    if (!target) throw new Error('optimize-assets requires a directory');
+    const results = optimizeAssetsInDir(path.resolve(target), {
+      maxDimension: Number(opts.maxDimension || 2200),
+      minBytes: Number(opts.minBytes || 900 * 1024)
+    });
+    const saved = results.reduce((sum, r) => sum + (r.before - r.after), 0);
+    console.log(`Optimized ${results.length} asset(s), saved ${(saved / 1024).toFixed(0)} KiB`);
+    for (const r of results) console.log(`  ${path.basename(r.input)}: ${(r.before / 1024).toFixed(0)} -> ${(r.after / 1024).toFixed(0)} KiB`);
     return;
   }
 

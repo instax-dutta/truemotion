@@ -10,6 +10,7 @@ import { validateSceneHtml, evolveGuide, evolveWarnings } from './validate.js';
 import { readSkill } from './skill.js';
 import { sceneNotes, actorExitStates, matchedCut, renderVideo } from './render.js';
 import { makeContactSheet } from './sheet.js';
+import { optimizeAssetsInDir } from './assets.js';
 import { percent } from './diff.js';
 
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
@@ -264,6 +265,28 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
       return text(`Rendered ${result.frames} frames to ${result.output}`);
     } catch (e) {
       return error(`render_video failed: ${e.message}`);
+    }
+  }));
+
+  server.registerTool('optimize_assets', {
+    description: 'Downscale and recompress large PNG/JPEG assets in the project assets folder using local ffmpeg. Files keep their names so ASSET tokens stay valid.',
+    inputSchema: z.object({
+      dir: z.string().optional().describe('Asset directory; defaults to the directory beside the state file.'),
+      maxDimension: z.number().int().positive().optional(),
+      minBytes: z.number().int().positive().optional()
+    })
+  }, async (input) => withState(async () => {
+    try {
+      const baseDir = path.dirname(path.resolve(stateFile));
+      const dir = path.resolve(baseDir, input.dir ?? 'assets');
+      const results = optimizeAssetsInDir(dir, {
+        maxDimension: input.maxDimension ?? 2200,
+        minBytes: input.minBytes ?? 900 * 1024
+      });
+      const saved = results.reduce((sum, r) => sum + (r.before - r.after), 0);
+      return text(`Optimized ${results.length} asset(s), saved ${(saved / 1024).toFixed(0)} KiB.`);
+    } catch (e) {
+      return error(`optimize_assets failed: ${e.message}`);
     }
   }));
 

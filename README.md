@@ -89,6 +89,16 @@ node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --a
 
 `--start 4 --end 8` renders only that global time range, which is useful for debugging one beat. `--concurrency N` renders frames on N browser pages in parallel and is the main speed control (default 2). Frame order is preserved exactly; content is seek-deterministic, though subpixel antialiasing can vary marginally with the number of concurrent pages. `--crf` defaults to 18 (higher quality than ffmpeg's default). `--audio` loops the file, fades it in and out, and cuts it to the video length.
 
+Large project assets can be downscaled and recompressed locally. Filenames are
+preserved so `{{ASSET:...}}` tokens keep working:
+
+```bash
+node bin/truemotion.mjs optimize-assets ./assets --max-dimension 2200
+```
+
+The same operation is available to agents as the `optimize_assets` MCP tool.
+It is a standalone ffmpeg implementation; no Electron or cloud service is involved.
+
 For frame-accurate QA without ffmpeg, export a single PNG:
 
 ```bash
