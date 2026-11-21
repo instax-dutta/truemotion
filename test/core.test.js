@@ -33,6 +33,9 @@ test('valid scene contract passes and broken ones fail', () => {
   assert.equal(validateSceneHtml('<div>no timeline</div>').ok, false);
   const badFont = MINIMAL.replace('.frame{', '.frame{font-family:Inter;');
   assert.equal(validateSceneHtml(badFont).ok, false);
+  assert.equal(validateSceneHtml(MINIMAL.replace('tl.fromTo', 'tl.from')).ok, false);
+  assert.equal(validateSceneHtml(MINIMAL.replace('</head>', '<script src="https://x/y.js"></script></head>')).ok, false);
+  assert.equal(validateSceneHtml(MINIMAL.replace('.frame{', '.frame{transition:opacity 1s;')).ok, false);
 });
 
 test('state add and patch keep scenes consistent', () => {

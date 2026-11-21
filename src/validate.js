@@ -5,6 +5,20 @@ const BANNED_FONTS = [
   'Cormorant Garamond', 'Bodoni Moda', 'EB Garamond', 'Cinzel', 'Prata', 'Syne'
 ];
 
+const STATIC_LINT = [
+  [/\.from\s*\(\s*['"`]/i, 'from() breaks cold seeks. Use fromTo() with explicit start and end states.'],
+  [/<script[^>]+src\s*=/i, 'External scripts are not allowed; use the {{GSAP}} token.'],
+  [/@import\b/i, 'External CSS imports are not allowed; use {{FONTS_CSS}}.'],
+  [/url\(\s*['"]?https?:\/\//i, 'External asset URLs are not allowed; use {{ASSET:...}} tokens.'],
+  [/\b(?:setTimeout|setInterval|fetch\s*\(|XMLHttpRequest)\b/i, 'Timers and network calls cannot be seeked deterministically.'],
+  [/requestAnimationFrame\s*\(/i, 'requestAnimationFrame is not seek-safe. All motion belongs on the timeline.'],
+  [/@keyframes\b|transition\s*:/i, 'CSS keyframes and transitions run on wall-clock time. Animate on the GSAP timeline.']
+];
+
+export function lintSceneHtml(html) {
+  return STATIC_LINT.filter(([pattern]) => pattern.test(html)).map(([, message]) => message);
+}
+
 export function validateSceneHtml(html) {
   const text = String(html ?? '').trim();
   if (!text) return { ok: false, message: 'Scene html is empty.' };
@@ -26,6 +40,8 @@ export function validateSceneHtml(html) {
   if (/`[^`\n]*\{\{ICON:\$\{[^}]+\}[^`]*\}\}[^`\n]*`/.test(text)) {
     return { ok: false, message: 'Dynamic {{ICON:...}} tokens must not be wrapped in JS backticks. Call the resolver directly.' };
   }
+  const lint = lintSceneHtml(text);
+  if (lint.length) return { ok: false, message: `Scene violates the seek-safety contract: ${lint.join(' ')}` };
   return { ok: true };
 }
 
