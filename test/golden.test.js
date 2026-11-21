@@ -5,7 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderFrames } from '../src/render.js';
 import { diffPng } from '../src/diff.js';
-import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES, SHADERS_HTML, SHADERS_TIMES, BRAND_HTML, BRAND_TIMES, BRAND, COMPONENT_HTML, COMPONENT_TIMES, THREE_HTML, THREE_TIMES } from './fixtures/golden-scene.mjs';
+import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES, SHADERS_HTML, SHADERS_TIMES, BRAND_HTML, BRAND_TIMES, BRAND, COMPONENT_HTML, COMPONENT_TIMES, THREE_HTML, THREE_TIMES, COMBINED_GOLDEN_TIMES, COMBINED_GOLDEN_BRAND } from './fixtures/golden-scene.mjs';
+import { COMBINED_HTML } from '../examples/combined-scene.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const goldenDir = path.join(dir, 'fixtures/golden');
@@ -19,7 +20,8 @@ test('golden frames match the pinned render', { skip: !enabled && 'set TRUEMOTIO
     { prefix: 'shaders', html: SHADERS_HTML, times: SHADERS_TIMES },
     { prefix: 'brand', html: BRAND_HTML, times: BRAND_TIMES, brand: BRAND },
     { prefix: 'component', html: COMPONENT_HTML, times: COMPONENT_TIMES },
-    { prefix: 'three', html: THREE_HTML, times: THREE_TIMES }
+    { prefix: 'three', html: THREE_HTML, times: THREE_TIMES },
+    { prefix: 'combined', html: COMBINED_HTML, times: COMBINED_GOLDEN_TIMES, brand: COMBINED_GOLDEN_BRAND }
   ];
   for (const set of sets) {
     const frames = await renderFrames(set.html, {

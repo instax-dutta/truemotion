@@ -48,11 +48,17 @@ locally. This audit closes the RE workstream; remaining gaps are deliberate.
 ## Verification commands
 
 ```
-npm test                      # 33 passing tests
+npm test                      # unit tests
+npm run test:e2e              # authors the all-token scene through MCP, renders it
+TRUEMOTION_GOLDEN=1 npm test   # unit + pinned-browser golden frames
 npm run selftest              # stdio tool path, 6 tools
 npm run benchmark -- --write  # performance and footprint
 npm pack --dry-run            # published file list
 ```
+
+The combined scene (`examples/combined-scene.mjs`) exercises every local helper
+in one document and is covered by both a golden fixture and the MCP end-to-end
+test, proving the helpers work together rather than only in isolation.
 
 ## Open items
 

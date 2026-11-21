@@ -1,4 +1,4 @@
-// Six-scene, art-directed demo authored entirely through truemotion's MCP tools.
+// Seven-scene, art-directed demo authored entirely through truemotion's MCP tools.
 // Run: node examples/pro-demo.mjs
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { COMBINED_HTML } from './combined-scene.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'examples/pro-out');
@@ -192,7 +193,7 @@ tl.to('.grid',{backgroundPosition:'-58px -32px',duration:2.5,ease:'sine.inOut'},
 
 const scenes = [
   ['Cold open', t1], ['The manifesto', t2], ['Prompt to film', t3],
-  ['Frame perfect', t4], ['Continuity', t5], ['Outro', t6]
+  ['Frame perfect', t4], ['Continuity', t5], ['The toolkit', COMBINED_HTML], ['Outro', t6]
 ];
 
 const transport = new StdioClientTransport({ command: 'node', args: [bin, 'serve', '--state', stateFile] });
@@ -201,7 +202,7 @@ await client.connect(transport);
 for (const [name, html] of scenes) {
   const r = await client.callTool({
     name: 'add_scene',
-    arguments: { name, durationSec: html.match(/__SCENE_DURATION__=([\d.]+)/)[1] === '5' ? 5 : 4, html, freshStart: true }
+    arguments: { name, durationSec: Number(html.match(/__SCENE_DURATION__\s*=\s*([\d.]+)/)?.[1] ?? 4), html, freshStart: true }
   });
   const summary = (r.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n');
   console.log(`add_scene ${name}: ${r.isError ? 'ERROR' : 'ok'} | ${summary.slice(0, 240).replace(/\n/g, ' ')}`);
@@ -215,7 +216,9 @@ await client.close();
 
 const wav = path.join(outDir, 'ambient.wav');
 const audio = path.join(outDir, 'ambient-score.m4a');
-const score = spawnSync('python3', [path.join(root, 'examples/ambient.py'), wav], { encoding: 'utf8' });
+const persisted = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+const totalSeconds = persisted.scenes.reduce((sum, scene) => sum + scene.durationSec, 0);
+const score = spawnSync('python3', [path.join(root, 'examples/ambient.py'), wav, String(totalSeconds)], { encoding: 'utf8' });
 console.log('audio score:', score.stdout.trim() || score.stderr.slice(-200));
 const encode = spawnSync('ffmpeg', ['-y', '-i', wav, '-c:a', 'aac', '-b:a', '192k', audio, '-loglevel', 'error'], { encoding: 'utf8' });
 console.log('audio encode:', encode.status === 0 ? 'ok' : encode.stderr.slice(-200));

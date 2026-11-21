@@ -51,6 +51,7 @@
     "selftest": "node bin/truemotion.mjs selftest",
     "benchmark": "node scripts/benchmark.mjs",
     "goldens": "node scripts/generate-goldens.mjs",
+    "test:e2e": "TRUEMOTION_E2E=1 node --test test/combined-e2e.test.js",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {

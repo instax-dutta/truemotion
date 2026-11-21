@@ -19,6 +19,12 @@ window.__SCENE_TIMELINE__=tl;
 window.__SCENE_DURATION__=4;
 </script></body></html>`;
 
+export const COMBINED_GOLDEN_TIMES = [0.5, 2, 3.5];
+export const COMBINED_GOLDEN_BRAND = {
+  primary: '#F5A524', background: '#0B0E14', text: '#F3EFE9',
+  accent: '#F5A524', muted: 'rgba(243,239,231,0.62)', logo: ''
+};
+
 export const THREE_TIMES = [0.5, 2, 3.5];
 
 export const THREE_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>

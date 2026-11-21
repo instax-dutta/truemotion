@@ -7,9 +7,11 @@ An open, harness-agnostic core for authoring and rendering motion-graphics video
 
 ![Six scenes from the pro demo](docs/demo-contact-sheet.png)
 
-The [finished 25-second demo](examples/pro-out/pro-demo.mp4) and its
+The [finished 29-second demo](examples/pro-out/pro-demo.mp4) and its
 [state file](examples/pro-out/state.json) are in this repository. Regenerate them with
-`npm run demo:pro`.
+`npm run demo:pro`. Its sixth scene ("The toolkit") deliberately exercises every
+local helper in one shot: `{{BRAND:*}}`, `{{COMPONENT:*}}`, `{{ROUGH}}`, `{{FX}}`,
+`{{SHADERS}}` and `{{THREE}}`.
 
 This project was recovered by reverse engineering **OpenMotion 1.1.0** (`/Applications/OpenMotion.app`, an Electron + React app signed by "Meta Dots", updater `anovius/openmotion`). The original ships its tools through an embedded MCP server wired to the Claude Agent SDK and Codex SDK. TrueMotion keeps the useful part, the tool contract, the scene format, and the motion-design references, and drops everything that ties it to one vendor: no Electron UI, no account, no license gate, no model SDK. The result is a plain stdio MCP server that any coding agent can drive, plus a renderer you can run yourself.
 
@@ -119,7 +121,7 @@ node examples/intro-demo.mjs
 
 The generated state and MP4 land in `examples/out/` (gitignored).
 
-For a larger, art-directed piece, run `node examples/pro-demo.mjs`. It authors six scenes (kinetic wordmark, manifesto typography, prompt-to-film pipeline with typing, frame/count-up data visual, measured-continuity panels, outro lockup) through the same MCP tools, runs `review_timeline`, and renders a 25-second 1080p H.264 film with a generated stereo ambient score into `examples/pro-out/`. The score is produced by `examples/ambient.py` (Python 3 with numpy): an Am-F-C-G-Am pad with sub layer, detuned voices, soft plucked arpeggio, breathing air texture, short feedback delays and fades, encoded to AAC. Every scene in it passes the motion audit with measured build and resolve change.
+For a larger, art-directed piece, run `node examples/pro-demo.mjs`. It authors seven scenes (kinetic wordmark, manifesto typography, prompt-to-film pipeline with typing, frame/count-up data visual, measured-continuity panels, an all-token toolkit scene, and an outro lockup) through the same MCP tools, runs `review_timeline`, and renders a 29-second 1080p H.264 film with a generated stereo ambient score into `examples/pro-out/`. The score is produced by `examples/ambient.py` (Python 3 with numpy): an Am-F-C-G-Am pad with sub layer, detuned voices, soft plucked arpeggio, breathing air texture, short feedback delays and fades, encoded to AAC. Every scene in it passes the motion audit with measured build and resolve change.
 
 ## State file
 
@@ -175,6 +177,7 @@ npm run selftest
 npm pack --dry-run
 npm run benchmark -- --write   # records docs/benchmarks/latest.md
 npm run goldens                # regenerate pinned golden frames after renderer changes
+npm run test:e2e               # authors the all-token scene through MCP and renders it
 ```
 
 CI runs a pinned-Chromium golden-frame regression job. The fixtures are

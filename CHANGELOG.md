@@ -36,6 +36,8 @@
   golden-frame coverage.
 - Added a local CSS-3D `{{THREE}}` helper with unit and golden-frame coverage;
   all documented authoring tokens are now supported locally.
+- Added a shared all-token scene used by the shipped demo and an MCP end-to-end
+  regression, with golden fixtures proving every helper works together.
 
 ## 0.2.0
 

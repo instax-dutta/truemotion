@@ -7,7 +7,7 @@ import wave
 import numpy as np
 
 SR = 44100
-DURATION = 25.0
+DURATION = float(sys.argv[2]) if len(sys.argv) > 2 else 25.0
 T = np.arange(int(SR * DURATION), dtype=np.float64) / SR
 
 # Am - F - C - G - Am, one chord every five seconds.
