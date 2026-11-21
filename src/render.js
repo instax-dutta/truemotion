@@ -21,10 +21,13 @@ export function chunkTimes(count, concurrency) {
 }
 
 async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, chrome } = {}, existingBrowser) {
-  const [width, height] = dimensions(aspect, resolution);
+  // Keep the CSS composition at source size so fixed-pixel layouts do not
+  // reflow; scale only the raster via deviceScaleFactor.
+  const [width, height] = dimensions(aspect, '1080p');
+  const [outputWidth] = dimensions(aspect, resolution);
   const injected = injectSceneHtml(html, { width, height, assetsDir });
   const browser = existingBrowser ?? await launchBrowser(chrome);
-  const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: outputWidth / width });
   const requests = new Set();
   const errors = [];
   page.on('request', (req) => {
