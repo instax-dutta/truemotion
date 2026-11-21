@@ -27,6 +27,8 @@ jobs:
         run: npm run benchmark -- --write
       - name: Full page-pool long-form benchmark
         run: LF_REPORT=docs/benchmarks/nightly-linux.md npm run bench:longform
+      - name: Performance and memory regression guard
+        run: LF_REPORT=docs/benchmarks/nightly-linux.md npm run guard:longform
       - name: Upload benchmark reports
         if: always()
         uses: actions/upload-artifact@v4

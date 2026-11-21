@@ -58,6 +58,17 @@ ffmpeg) every 500 ms. Summing per-process RSS double-counts shared library and
 GPU pages, so the figure is an upper bound. Frames are streamed to ffmpeg via
 `image2pipe` in bounded batches; no full-frame staging directory is written.
 
+## CI regression guard
+
+The nightly workflow runs `npm run guard:longform` against its Linux report.
+The guard fails the job if the 1200-frame render produces fewer than 1200
+frames, a frame count different from the expected total, throughput below
+**4 fps**, peak process-tree RSS above **2800 MiB**, or an output outside
+1000-50000 KiB. Observed Linux values are 5.4-6.0 fps and 2327-2368 MiB, so the
+thresholds leave reasonable headroom while catching drastic regressions.
+Thresholds can be adjusted per runner with `GUARD_MIN_FRAMES`, `GUARD_MIN_FPS`,
+`GUARD_MAX_RSS_MIB`, `GUARD_MIN_OUTPUT_KIB` and `GUARD_MAX_OUTPUT_KIB`.
+
 ## Crash recovery / resume
 
 Long renders are divided into independently encoded MPEG-TS segments with a
