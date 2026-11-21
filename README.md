@@ -118,6 +118,10 @@ This is intentionally compatible with OpenMotion's scene tool state, so a projec
 - There is no GUI, brand-kit scraper or in-app sound editor. The CLI can mux a single audio bed with `--audio`, but there is no timeline-level mixing.
 - Frame-by-frame seeking is deterministic but slow for long videos; use a lower `--fps` for drafts.
 
+## Documentation
+
+Full documentation lives in [`docs/dox/`](docs/dox/): getting-started, architecture, reference, contributing.
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and
