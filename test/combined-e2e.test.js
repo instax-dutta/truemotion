@@ -56,6 +56,25 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     ], { encoding: 'utf8' }).stdout);
     assert.equal(Number(probe.format.duration), 4);
 
+    // Interruption + resume: render one checkpoint segment, then resume.
+    const resumeOut = path.join(dir, 'resumed.mp4');
+    const partial = await call('render_video', {
+      out: resumeOut, fps: 5, resolution: '540p', batchSize: 2,
+      segmentSize: 4, maxSegments: 2, keepCheckpoints: true
+    });
+    assert.ok(partial.content.find((b) => b.type === 'text').text.includes('Checkpoint'));
+    assert.ok(!fs.existsSync(resumeOut), 'partial render must not emit a final file');
+    const resumed = await call('render_video', {
+      out: resumeOut, fps: 5, resolution: '540p', batchSize: 2,
+      segmentSize: 4, resume: true
+    });
+    const resumeText = resumed.content.find((b) => b.type === 'text').text;
+    assert.ok(resumeText.includes('resumed'), resumeText);
+    const resumedProbe = JSON.parse(spawnSync('ffprobe', [
+      '-v', 'error', '-show_entries', 'stream=nb_frames', '-of', 'json', resumeOut
+    ], { encoding: 'utf8' }).stdout);
+    assert.equal(Number(resumedProbe.streams[0].nb_frames), 20);
+
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);
   } finally {

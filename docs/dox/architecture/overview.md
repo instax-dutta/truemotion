@@ -19,7 +19,8 @@ cloud service or model SDK. Every dependency is local.
 | `src/validate.js` | Contract validation, static seek-safety lint, evolve warnings. |
 | `src/inject.js` | Local token resolution: GSAP, fonts, icons, assets, typing runtime, CSP. |
 | `src/render.js` | Scene probe, frame capture, measurement, parallel rendering with page reuse. |
-| `src/encode.js` | Bounded frame streaming into ffmpeg via `image2pipe`, with stdin backpressure. |
+| `src/encode.js` | Bounded frame streaming into ffmpeg via `image2pipe`, with stdin backpressure and segment/finalize arg builders. |
+| `src/segments.js` | Checkpoint manifest, byte-verified segment discovery, concat list generation. |
 | `src/diff.js` | PNG pixel-diff metrics. |
 | `src/sheet.js` | Contact-sheet composition from frame PNGs. |
 | `src/browser.js` | Browser resolution and launch via `playwright-core`; system Chrome first, cached browser as fallback, clear error otherwise. |
@@ -36,7 +37,9 @@ tokens into the scene HTML, opens it in headless Chromium, seeks the single GSAP
 timeline to each frame time, and pipes PNG bytes directly into ffmpeg's stdin.
 Pages are opened once per scene and reused across batches; only `batchSize`
 frames are held in memory at once, and stdin backpressure is awaited, so memory
-stays flat for long videos and no staging directory is written.
+stays flat for long videos and no staging directory is written. Long renders are
+split into MPEG-TS segments with a verified manifest, allowing an interrupted
+render to resume without re-encoding completed frames.
 
 ## Design constraints
 

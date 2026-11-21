@@ -9,5 +9,5 @@
 - `list_skills` — list available reference documents.
 - `view_sketch` — load sketch PNG.
 - `review_timeline` — audit timeline; returns notes plus one contact sheet.
-- `render_video` — render the timeline to MP4 from inside the agent. Accepts `out`, `fps`, `resolution`, `crf`, `audio`, `startSec`, `endSec`, `concurrency`, `batchSize`.
+- `render_video` — render the timeline to MP4 from inside the agent. Accepts `out`, `fps`, `resolution`, `crf`, `audio`, `startSec`, `endSec`, `concurrency`, `batchSize`, `segmentSize`, `maxSegments`, `resume`, `keepCheckpoints`. Partial renders return a checkpoint message instead of a path.
 - `optimize_assets` — downscale and recompress large local PNG/JPEG assets; filenames are preserved.

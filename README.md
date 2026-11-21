@@ -190,5 +190,12 @@ Measured footprint and frame rates on one machine are recorded in
 run is in [docs/benchmarks/longform.md](docs/benchmarks/longform.md): a 2-minute
 1080p timeline (1200 frames, 30 scenes) held a flat ~1.2 GiB process-tree peak
 RSS, the same as a 40-second 400-frame run, confirming memory is bounded by the
-batch and browser pool rather than video length. Run `npm run bench:longform`
+batch and browser pool rather than video length; at the same 400 frames,
+`--concurrency 1` reduced peak RSS to 910 MiB. Run `npm run bench:longform`
 to reproduce it. The npm package itself does not include the rendered demo film.
+
+Long renders can be split across invocations with `--segment-size` and
+`--max-segments`, then finished with `--resume`. Completed segments are
+checkpointed as MPEG-TS files with a byte-verified manifest, so an interrupted
+render never loses work. The same options are available on the MCP
+`render_video` tool.

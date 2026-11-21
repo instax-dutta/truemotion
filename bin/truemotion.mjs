@@ -31,7 +31,7 @@ function help() {
 Usage:
   truemotion init [state.json] [--aspect 16:9|9:16|1:1] [--resolution 1080p|720p|540p]
   truemotion serve --state <state.json> [--skill <dir>] [--assets <dir>] [--no-preview]
-  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--concurrency 2] [--batch-size 30] [--start 4 --end 8] [--audio <file>] [--assets <dir>] [--chrome <path>]
+  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--concurrency 2] [--batch-size 30] [--segment-size 240] [--resume] [--max-segments 2] [--start 4 --end 8] [--audio <file>] [--assets <dir>] [--chrome <path>]
   truemotion serve --state <state.json> [--chrome <path>]        # reuses system Chrome if set
   truemotion still --state <state.json> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]
   truemotion optimize-assets <dir> [--max-dimension 2200] [--min-bytes 921600]
@@ -81,12 +81,20 @@ async function main() {
       chrome: opts.chrome ? path.resolve(opts.chrome) : undefined,
       concurrency: Math.max(1, Number(opts.concurrency || 2)),
       batchSize: Math.max(1, Number(opts.batchSize || 30)),
+      segmentSize: opts.segmentSize ? Math.max(1, Number(opts.segmentSize)) : 0,
+      resume: opts.resume === true,
+      maxSegments: opts.maxSegments ? Math.max(0, Number(opts.maxSegments)) : Infinity,
+      keepCheckpoints: opts.keepCheckpoints === true,
       startSec: Number(opts.start || 0),
       endSec: opts.end === true ? Infinity : Number(opts.end || Infinity),
       audio: opts.audio ? path.resolve(opts.audio) : undefined,
       assetsDir: opts.assets ? path.resolve(opts.assets) : path.join(path.dirname(path.resolve(stateFile)), 'assets')
     });
-    console.log(`Rendered ${result.frames} frames to ${result.output}`);
+    if (result.partial) {
+      console.log(`Checkpoint: ${result.frames} frames done, ${result.segmentsRemaining} segment(s) remaining. Resume with --resume.`);
+    } else {
+      console.log(`Rendered ${result.frames} frames to ${result.output}${result.resumed ? ' (resumed)' : ''}`);
+    }
     return;
   }
 

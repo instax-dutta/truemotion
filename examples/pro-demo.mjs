@@ -223,6 +223,6 @@ console.log('audio score:', score.stdout.trim() || score.stderr.slice(-200));
 const encode = spawnSync('ffmpeg', ['-y', '-i', wav, '-c:a', 'aac', '-b:a', '192k', audio, '-loglevel', 'error'], { encoding: 'utf8' });
 console.log('audio encode:', encode.status === 0 ? 'ok' : encode.stderr.slice(-200));
 
-const rendered = spawnSync('node', [bin, 'render', '--state', stateFile, '--out', path.join(outDir, 'pro-demo.mp4'), '--fps', '24', '--crf', '17', '--audio', audio], { encoding: 'utf8' });
+const rendered = spawnSync('node', [bin, 'render', '--state', stateFile, '--out', path.join(outDir, 'pro-demo.mp4'), '--fps', '24', '--crf', '17', '--segment-size', 120, '--audio', audio], { encoding: 'utf8' });
 console.log(rendered.stdout.trim(), rendered.stderr.trim());
 console.log('VIDEO', path.join(outDir, 'pro-demo.mp4'));

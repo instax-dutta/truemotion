@@ -255,7 +255,11 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
       startSec: z.number().min(0).optional(),
       endSec: z.number().positive().optional(),
       concurrency: z.number().int().min(1).max(16).optional(),
-      batchSize: z.number().int().min(1).max(500).optional().describe('Frames held in memory per streaming batch. Lower for long videos on small machines.')
+      batchSize: z.number().int().min(1).max(500).optional().describe('Frames held in memory per streaming batch. Lower for long videos on small machines.'),
+      segmentSize: z.number().int().min(1).optional().describe('Frames per resumable checkpoint segment.'),
+      resume: z.boolean().optional().describe('Resume from an existing checkpoint instead of starting fresh.'),
+      maxSegments: z.number().int().min(0).optional().describe('Render at most this many segments this call; the rest remain for a later resume.'),
+      keepCheckpoints: z.boolean().optional()
     })
   }, async (input) => withState(async (state) => {
     try {
@@ -270,9 +274,16 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
         startSec: input.startSec ?? 0,
         endSec: input.endSec ?? Infinity,
         concurrency: input.concurrency ?? 2,
-        batchSize: input.batchSize ?? 30
+        batchSize: input.batchSize ?? 30,
+        segmentSize: input.segmentSize,
+        resume: input.resume ?? false,
+        maxSegments: input.maxSegments ?? Infinity,
+        keepCheckpoints: input.keepCheckpoints ?? false
       });
-      return text(`Rendered ${result.frames} frames to ${result.output}`);
+      if (result.partial) {
+        return text(`Checkpoint: ${result.frames}/${state.scenes.reduce((s, sc) => s + sc.durationSec, 0) * (input.fps ?? 30)} frames done. ${result.segmentsRemaining} segment(s) left. Resume with resume:true.`);
+      }
+      return text(`Rendered ${result.frames} frames to ${result.output}${result.resumed ? ' (resumed)' : ''}`);
     } catch (e) {
       return error(`render_video failed: ${e.message}`);
     }

@@ -1,5 +1,12 @@
+import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { launchBrowser } from './browser.js';
-import { createEncoder } from './encode.js';
+import { createEncoder, buildFinalizeArgs } from './encode.js';
+import {
+  checkpointDirFor, manifestPath, segmentPath, emptyManifest, readManifest,
+  writeManifest, clearCheckpoint, completedIndices, planSegments,
+  manifestCompatible, writeConcatList
+} from './segments.js';
 import { injectSceneHtml } from './inject.js';
 import { dimensions } from './state.js';
 import { diffPng, percent } from './diff.js';
@@ -286,50 +293,129 @@ export async function matchedCut(previous, candidate, state, { assetsDir, chrome
   }
 }
 
+async function renderSegment(browser, segment, chosen, state, options) {
+  const {
+    aspect, resolution, assetsDir, audio, crf, concurrency,
+    batchSize, checkpointDir, chrome
+  } = options;
+  const frames = chosen.slice(segment.start, segment.start + segment.count);
+  const encoder = createEncoder({
+    fps: options.fps, crf, outPath: segmentPath(checkpointDir, segment.index)
+  });
+  let written = 0;
+  try {
+    const byScene = new Map();
+    for (const frame of frames) {
+      if (!byScene.has(frame.sceneIndex)) byScene.set(frame.sceneIndex, []);
+      byScene.get(frame.sceneIndex).push(frame);
+    }
+    for (const [sceneIndex, sceneFrames] of [...byScene.entries()].sort((a, b) => a[0] - b[0])) {
+      const scene = state.scenes[sceneIndex];
+      await renderFramesParallel(browser, scene.html, {
+        aspect, resolution, timesSec: sceneFrames.map((f) => f.time), assetsDir,
+        brand: state.brand, components: state.components,
+        concurrency: Math.min(concurrency, sceneFrames.length), batchSize,
+        onBatch: async (rendered) => {
+          for (const frame of rendered) {
+            await encoder.write(Buffer.from(frame, 'base64'));
+            written += 1;
+          }
+        }
+      });
+    }
+    await encoder.finish();
+    return written;
+  } catch (error) {
+    await encoder.finish().catch(() => {});
+    throw error;
+  }
+}
+
+function finalizeSegments(manifest, checkpointDir, outPath, audio) {
+  const list = writeConcatList(checkpointDir, manifest.segments);
+  const result = spawnSync('ffmpeg', buildFinalizeArgs({
+    listFile: list, audio, outPath, totalSeconds: manifest.totalFrames / manifest.fps
+  }), { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`ffmpeg finalize failed: ${(result.stderr || '').slice(-1000)}`);
+}
+
 export async function renderVideo(state, outPath, {
   fps = 30, resolution, assetsDir, audio, chrome, concurrency = 2,
-  startSec = 0, endSec = Infinity, crf = 18, batchSize = 30
+  startSec = 0, endSec = Infinity, crf = 18, batchSize = 30,
+  segmentSize = 0, resume = false, checkpointDir: checkpointOverride,
+  maxSegments = Infinity, keepCheckpoints = false
 } = {}) {
   const outputResolution = resolution || state.resolution || '1080p';
   const size = Math.max(1, Math.floor(batchSize));
   const chosen = selectFrames(state.scenes, fps, startSec, endSec);
   if (!chosen.length) throw new Error('No frames in the requested range.');
 
-  const byScene = new Map();
-  for (const frame of chosen) {
-    if (!byScene.has(frame.sceneIndex)) byScene.set(frame.sceneIndex, []);
-    byScene.get(frame.sceneIndex).push(frame);
+  const segmentFrames = Math.max(size, Math.floor(segmentSize || batchSize * 4));
+  const checkpointDir = checkpointDirFor(outPath, checkpointOverride);
+  const meta = {
+    fps, resolution: outputResolution,
+    totalFrames: chosen.length, segmentSize: segmentFrames,
+    audio: audio || null
+  };
+
+  let manifest = resume ? readManifest(checkpointDir) : null;
+  if (manifest && !manifestCompatible(manifest, meta)) manifest = null;
+  if (!manifest) {
+    clearCheckpoint(checkpointDir);
+    manifest = emptyManifest(meta);
+    writeManifest(checkpointDir, manifest);
   }
 
-  const encoder = createEncoder({
-    fps, audio, crf, outPath, totalSeconds: chosen.length / fps
-  });
-  const browser = await launchBrowser(chrome);
-  let index = 0;
+  const segments = planSegments(chosen.length, segmentFrames);
+  const done = completedIndices(manifest, checkpointDir);
+  const pending = segments.filter((segment) => !done.has(segment.index));
+  const budget = Number.isFinite(maxSegments) ? pending.slice(0, Math.max(0, maxSegments)) : pending;
+
+  const browser = budget.length ? await launchBrowser(chrome) : null;
   try {
-    for (const [sceneIndex, framesToRender] of [...byScene.entries()].sort((a, b) => a[0] - b[0])) {
-      const scene = state.scenes[sceneIndex];
-      await renderFramesParallel(browser, scene.html, {
-        aspect: state.aspect, resolution: outputResolution,
-        timesSec: framesToRender.map((f) => f.time), assetsDir,
-        brand: state.brand, components: state.components,
-        concurrency, batchSize: size,
-        onBatch: async (frames) => {
-          for (const frame of frames) {
-            await encoder.write(Buffer.from(frame, 'base64'));
-            index += 1;
-          }
-        }
+    for (const segment of budget) {
+      const framesRendered = await renderSegment(browser, segment, chosen, state, {
+        aspect: state.aspect, resolution: outputResolution, assetsDir, audio, crf,
+        concurrency, batchSize: size, checkpointDir, fps, chrome
       });
+      if (framesRendered !== segment.count) {
+        throw new Error(`Segment ${segment.index} produced ${framesRendered} frames, expected ${segment.count}`);
+      }
+      manifest.segments.push({
+        index: segment.index, start: segment.start, count: segment.count,
+        bytes: fs.statSync(segmentPath(checkpointDir, segment.index)).size
+      });
+      manifest.segments.sort((a, b) => a.index - b.index);
+      writeManifest(checkpointDir, manifest);
     }
-    await encoder.finish();
-    return { frames: index, output: outPath };
-  } catch (error) {
-    await encoder.finish().catch(() => {});
-    throw error;
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
+
+  const remaining = segments.filter((segment) => !completedIndices(manifest, checkpointDir).has(segment.index));
+  if (remaining.length) {
+    return {
+      frames: manifest.segments.reduce((sum, s) => sum + s.count, 0),
+      output: null,
+      partial: true,
+      segmentsRendered: budget.length,
+      segmentsRemaining: remaining.length,
+      checkpointDir
+    };
+  }
+
+  finalizeSegments(manifest, checkpointDir, outPath, audio);
+  manifest.finalized = true;
+  writeManifest(checkpointDir, manifest);
+  if (!keepCheckpoints) clearCheckpoint(checkpointDir);
+  return {
+    frames: manifest.totalFrames,
+    output: outPath,
+    partial: false,
+    segmentsRendered: budget.length,
+    resumed: done.size > 0,
+    checkpointDir
+  };
 }
 
 export { matchedCut as checkMatchedCut };
