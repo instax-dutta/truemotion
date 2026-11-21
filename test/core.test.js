@@ -18,6 +18,14 @@ test('dimensions cover the three aspects', () => {
   assert.deepEqual(dimensions('1:1'), [1080, 1080]);
 });
 
+test('resolution scales dimensions and rejects unknown values', () => {
+  assert.deepEqual(dimensions('16:9', '720p'), [1280, 720]);
+  assert.deepEqual(dimensions('16:9', '540p'), [960, 540]);
+  assert.deepEqual(dimensions('9:16', '540p'), [540, 960]);
+  assert.throws(() => dimensions('16:9', '4k'), /Unknown resolution/);
+  assert.equal(createState().resolution, '1080p');
+});
+
 test('valid scene contract passes and broken ones fail', () => {
   assert.equal(validateSceneHtml(MINIMAL).ok, true);
   assert.equal(validateSceneHtml('').ok, false);

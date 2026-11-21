@@ -9,15 +9,26 @@ export const ASPECTS = {
   '1:1': [1080, 1080]
 };
 
-export function dimensions(aspect) {
+export const RESOLUTIONS = {
+  '1080p': 1,
+  '720p': 2 / 3,
+  '540p': 0.5,
+  source: 1
+};
+
+export function dimensions(aspect, resolution = '1080p') {
   if (!(aspect in ASPECTS)) throw new Error(`Unknown aspect: ${aspect}. Supported: ${Object.keys(ASPECTS).join(', ')}`);
-  return ASPECTS[aspect];
+  const scale = RESOLUTIONS[resolution];
+  if (scale === undefined) throw new Error(`Unknown resolution: ${resolution}. Supported: ${Object.keys(RESOLUTIONS).join(', ')}`);
+  const [width, height] = ASPECTS[aspect];
+  return [Math.round(width * scale), Math.round(height * scale)];
 }
 
-export function createState({ aspect = '16:9', projectId = 'default' } = {}) {
+export function createState({ aspect = '16:9', resolution = '1080p', projectId = 'default' } = {}) {
   return {
     projectId,
     aspect,
+    resolution,
     scenes: [],
     sketchRefs: [],
     skillReadCache: {},

@@ -73,6 +73,8 @@ node bin/truemotion.mjs install-skill ~/.agents/skills/truemotion
 
 ```bash
 node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --fps 30 --crf 18
+# fast draft at half resolution
+node bin/truemotion.mjs render --state truemotion-state.json --out draft.mp4 --resolution 540p --fps 15
 # optional music bed, looped and faded in/out around the video
 node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --audio music.mp3
 ```

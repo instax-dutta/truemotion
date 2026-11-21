@@ -26,9 +26,9 @@ function help() {
   console.log(`truemotion - open, harness-agnostic motion-graphics tool
 
 Usage:
-  truemotion init [state.json] [--aspect 16:9|9:16|1:1]
+  truemotion init [state.json] [--aspect 16:9|9:16|1:1] [--resolution 1080p|720p|540p]
   truemotion serve --state <state.json> [--skill <dir>] [--assets <dir>] [--no-preview]
-  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--audio <file>] [--assets <dir>]
+  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--audio <file>] [--assets <dir>]
   truemotion install-skill <target-dir>
   truemotion doctor
 
@@ -47,7 +47,7 @@ async function main() {
   if (command === 'init') {
     const file = opts._[0] || stateFile;
     if (fs.existsSync(file)) throw new Error(`State file already exists: ${file}`);
-    saveState(file, createState({ aspect: opts.aspect || '16:9' }));
+    saveState(file, createState({ aspect: opts.aspect || '16:9', resolution: opts.resolution || '1080p' }));
     console.log(`Created ${path.resolve(file)}`);
     return;
   }
@@ -69,6 +69,7 @@ async function main() {
     const result = await renderVideo(loadState(stateFile), opts.out, {
       fps: Number(opts.fps || 30),
       crf: Number(opts.crf || 18),
+      resolution: opts.resolution || undefined,
       audio: opts.audio ? path.resolve(opts.audio) : undefined,
       assetsDir: opts.assets ? path.resolve(opts.assets) : path.join(path.dirname(path.resolve(stateFile)), 'assets')
     });
