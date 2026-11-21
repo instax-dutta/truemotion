@@ -71,3 +71,7 @@ test('evolve warnings flag a changed background', () => {
   const next = { html: MINIMAL.replace('background:#000', 'background:#fff') };
   assert.ok(evolveWarnings(prev, next).some((w) => w.includes('background')));
 });
+
+test('dimensions rejects unknown aspect', () => {
+  assert.throws(() => dimensions('4:3'));
+});

@@ -10,7 +10,8 @@ export const ASPECTS = {
 };
 
 export function dimensions(aspect) {
-  return ASPECTS[aspect] ?? ASPECTS['16:9'];
+  if (!(aspect in ASPECTS)) throw new Error(`Unknown aspect: ${aspect}. Supported: ${Object.keys(ASPECTS).join(', ')}`);
+  return ASPECTS[aspect];
 }
 
 export function createState({ aspect = '16:9', projectId = 'default' } = {}) {
