@@ -4,6 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { frameBackground } from './validate.js';
 import { DEFAULT_BRAND, normalizeBrand } from './brand.js';
 
+export const SCHEMA_VERSION = 1;
+
 export const ASPECTS = {
   '16:9': [1920, 1080],
   '9:16': [1080, 1920],
@@ -27,6 +29,7 @@ export function dimensions(aspect, resolution = '1080p') {
 
 export function createState({ aspect = '16:9', resolution = '1080p', projectId = 'default', brand = DEFAULT_BRAND } = {}) {
   return {
+    schemaVersion: SCHEMA_VERSION,
     projectId,
     aspect,
     resolution,
@@ -39,14 +42,27 @@ export function createState({ aspect = '16:9', resolution = '1080p', projectId =
   };
 }
 
-export function normalizeState(raw) {
+export function normalizeState(raw, { onWarning } = {}) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.scenes)) {
     throw new Error('Invalid state shape: missing scenes array');
   }
-  const aspect = raw.aspect ?? '16:9';
-  const resolution = raw.resolution ?? '1080p';
+  const declared = raw.schemaVersion;
+  let source = raw;
+  if (declared === undefined) {
+    onWarning?.('State file has no schemaVersion (legacy v0); migrated to v1. Save the file to persist the version.');
+    source = { ...raw, schemaVersion: SCHEMA_VERSION };
+  } else if (!Number.isInteger(declared)) {
+    throw new Error(`Invalid schemaVersion: ${JSON.stringify(declared)}`);
+  } else if (declared > SCHEMA_VERSION) {
+    throw new Error(`State file schema v${declared} is newer than supported v${SCHEMA_VERSION}; upgrade TrueMotion.`);
+  } else if (declared < SCHEMA_VERSION) {
+    onWarning?.(`Migrating state file from schema v${declared} to v${SCHEMA_VERSION}. Save the file to persist the version.`);
+    source = { ...raw, schemaVersion: SCHEMA_VERSION };
+  }
+  const aspect = source.aspect ?? '16:9';
+  const resolution = source.resolution ?? '1080p';
   dimensions(aspect, resolution);
-  const scenes = raw.scenes.map((scene, index) => {
+  const scenes = source.scenes.map((scene, index) => {
     if (!scene || typeof scene !== 'object') throw new Error(`Scene ${index + 1} is not an object`);
     if (typeof scene.id !== 'string' || !scene.id) throw new Error(`Scene ${index + 1} has no id`);
     if (typeof scene.name !== 'string' || !scene.name) throw new Error(`Scene ${index + 1} has no name`);
@@ -56,24 +72,26 @@ export function normalizeState(raw) {
     return { ...scene, durationSec: duration };
   });
   return {
-    ...raw,
+    ...source,
+    schemaVersion: SCHEMA_VERSION,
     aspect,
     resolution,
-    brand: normalizeBrand(raw.brand),
-    components: raw.components && typeof raw.components === 'object' ? raw.components : {},
+    brand: normalizeBrand(source.brand),
+    components: source.components && typeof source.components === 'object' ? source.components : {},
     scenes,
-    sketchRefs: Array.isArray(raw.sketchRefs) ? raw.sketchRefs : [],
-    skillReadCache: raw.skillReadCache && typeof raw.skillReadCache === 'object' ? raw.skillReadCache : {},
-    stats: raw.stats && typeof raw.stats === 'object' ? raw.stats : { readSkillCalls: 0, writeSceneCalls: 0 }
+    sketchRefs: Array.isArray(source.sketchRefs) ? source.sketchRefs : [],
+    skillReadCache: source.skillReadCache && typeof source.skillReadCache === 'object' ? source.skillReadCache : {},
+    stats: source.stats && typeof source.stats === 'object' ? source.stats : { readSkillCalls: 0, writeSceneCalls: 0 }
   };
 }
 
-export function loadState(file) {
+export function loadState(file, { onWarning } = {}) {
   if (!fs.existsSync(file)) throw new Error(`State file not found: ${file}`);
   const raw = fs.readFileSync(file, 'utf8');
   let parsed;
   try { parsed = JSON.parse(raw); } catch (e) { throw new Error(`Invalid state JSON in ${file}: ${e.message}`); }
-  try { return normalizeState(parsed); } catch (e) { throw new Error(`Invalid state in ${file}: ${e.message}`); }
+  const warn = onWarning ?? ((message) => console.warn(`[truemotion] ${message}`));
+  try { return normalizeState(parsed, { onWarning: warn }); } catch (e) { throw new Error(`Invalid state in ${file}: ${e.message}`); }
 }
 
 export function saveState(file, state) {

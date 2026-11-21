@@ -6,6 +6,7 @@
 - `truemotion still --state <file> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]` — export one seek-accurate frame as PNG. No ffmpeg needed; ideal for QA.
 - `truemotion optimize-assets <dir> [--max-dimension 2200] [--min-bytes 921600]` — downscale and recompress large PNG/JPEG assets in place with local ffmpeg.
 - `truemotion install-skill <target-dir>` — copy skill dir.
+- `truemotion validate-state [--state <file>]` — check schema version, scene count and aspect without modifying the file. Legacy files are reported with a migration warning.
 - `truemotion doctor [--state <file>]` — report Node, ffmpeg, browser, skill docs and state-file health.
 - `truemotion selftest` — start a throwaway stdio server and exercise five tools plus state persistence. No browser needed.
 - `npm run benchmark` / `npm run bench:longform` — record short and multi-minute render benchmarks with RSS sampling.

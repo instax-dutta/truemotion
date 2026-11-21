@@ -129,6 +129,7 @@ Plain JSON, so it is easy to inspect or version:
 
 ```json
 {
+  "schemaVersion": 1,
   "projectId": "default",
   "aspect": "16:9",
   "resolution": "1080p",
@@ -143,7 +144,7 @@ Plain JSON, so it is easy to inspect or version:
 }
 ```
 
-This is intentionally compatible with OpenMotion's scene tool state, so a project authored there can be opened here and vice versa.
+This is intentionally compatible with OpenMotion's scene tool state. Files without `schemaVersion` are treated as legacy v0, migrated to v1 and reported on stderr; files written by a newer schema are rejected rather than silently misread. Save the file after a migration to persist the version.
 
 ## Scope and limits
 

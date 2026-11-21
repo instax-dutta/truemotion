@@ -36,6 +36,7 @@ Usage:
   truemotion still --state <state.json> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]
   truemotion optimize-assets <dir> [--max-dimension 2200] [--min-bytes 921600]
   truemotion install-skill <target-dir>
+  truemotion validate-state [--state <file>]
   truemotion doctor
   truemotion selftest
 
@@ -171,6 +172,24 @@ async function main() {
     } finally {
       await client.close();
       fs.rmSync(dir, { recursive: true, force: true });
+    }
+    return;
+  }
+
+  if (command === 'validate-state') {
+    const { loadState, SCHEMA_VERSION } = await import('../src/state.js');
+    const warnings = [];
+    const state = loadState(stateFile, { onWarning: (message) => warnings.push(message) });
+    const bytes = fs.statSync(stateFile).size;
+    console.log(`state: ${path.resolve(stateFile)} (${bytes} bytes)`);
+    console.log(`schema: v${state.schemaVersion} (supported v${SCHEMA_VERSION})`);
+    console.log(`scenes: ${state.scenes.length}`);
+    console.log(`aspect/resolution: ${state.aspect} / ${state.resolution}`);
+    if (warnings.length) {
+      for (const warning of warnings) console.log(`warning: ${warning}`);
+      console.log('Run any write command to persist the migrated schema.');
+    } else {
+      console.log('status: ok');
     }
     return;
   }

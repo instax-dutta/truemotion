@@ -15,7 +15,7 @@ cloud service or model SDK. Every dependency is local.
 
 | Module | Responsibility |
 | --- | --- |
-| `src/state.js` | State normalisation, validation, atomic save, scene CRUD, digests. |
+| `src/state.js` | Schema versioning/migration, state normalisation, validation, atomic save, scene CRUD, digests. |
 | `src/validate.js` | Contract validation, static seek-safety lint, evolve warnings. |
 | `src/inject.js` | Local token resolution: GSAP, fonts, icons, assets, typing runtime, CSP. |
 | `src/render.js` | Scene probe, frame capture, measurement, parallel rendering with page reuse. |
