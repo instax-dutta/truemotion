@@ -84,7 +84,7 @@ test('skill paths cannot escape the skill directory', () => {
   assert.throws(() => skillPath(dir, 'scene-contract.txt'));
 });
 
-test('injection resolves tokens and rejects unsupported ones', () => {
+test('injection resolves all supported tokens locally', () => {
   const out = injectSceneHtml(MINIMAL, { width: 1920, height: 1080 });
   assert.ok(out.includes('1920px'));
   assert.ok(out.includes('1080px'));
@@ -93,7 +93,7 @@ test('injection resolves tokens and rejects unsupported ones', () => {
   assert.ok(out.includes("connect-src 'none'"));
   assert.ok(!out.includes('{{GSAP}}'));
   assert.ok(!out.includes('{{FONTS_CSS}}'));
-  assert.throws(() => injectSceneHtml('{{THREE}}', { width: 1, height: 1 }), /Unsupported/);
+  assert.ok(injectSceneHtml('{{THREE}}', { width: 1, height: 1 }).includes('data-om-three-runtime'));
 });
 
 test('icon tokens resolve locally with brand and mono colours', () => {

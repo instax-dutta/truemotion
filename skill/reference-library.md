@@ -24,6 +24,7 @@ hard cuts belong.
 - [Shader-style utilities](blocks/shaders.md) covers the `{{SHADERS}}` token.
 - [Brand tokens](blocks/brand.md) covers the `{{BRAND:*}}` tokens.
 - [Reusable components](blocks/components.md) covers `{{COMPONENT:*}}`.
+- [CSS-3D stages](blocks/three.md) covers the `{{THREE}}` token.
 
 ## Worked examples
 

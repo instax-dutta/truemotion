@@ -19,6 +19,28 @@ window.__SCENE_TIMELINE__=tl;
 window.__SCENE_DURATION__=4;
 </script></body></html>`;
 
+export const THREE_TIMES = [0.5, 2, 3.5];
+
+export const THREE_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0B0E14}
+.frame{position:relative;width:{{W}}px;height:{{H}}px;overflow:hidden;background:#0B0E14}
+#stage{position:absolute;inset:0;width:100%;height:100%}
+.back{width:400px;height:300px;background:#4D90FF}
+.front{width:260px;height:180px;background:#F5A524}
+</style></head><body><div class="frame"><div id="stage"><div class="back"></div><div class="front"></div></div></div>
+{{THREE}}
+<script>
+const world=OM3D.create('#stage',{perspective:900,maxRotation:6});
+world.addPlane('.back',{x:140,y:160,z:-150});
+world.addPlane('.front',{x:420,y:320,z:60});
+const tl=gsap.timeline({paused:true});
+tl.to({v:0},{v:1,duration:4},0);
+world.bindTimeline(tl,4);
+window.__SCENE_TIMELINE__=tl;
+window.__SCENE_DURATION__=4;
+</script></body></html>`;
+
 export const COMPONENT_TIMES = [0.5, 2, 3.5];
 
 export const COMPONENT_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>

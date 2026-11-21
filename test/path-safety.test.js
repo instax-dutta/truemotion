@@ -9,6 +9,6 @@ test('skillPath rejects traversal and non-md', () => {
   assert.throws(() => skillPath(dir, 'foo.txt'));
 });
 
-test('injectSceneHtml rejects unsupported tokens', () => {
-  assert.throws(() => injectSceneHtml('{{THREE}}', { width: 1, height: 1 }), /Unsupported/);
+test('injectSceneHtml resolves the THREE token locally', () => {
+  assert.ok(injectSceneHtml('{{THREE}}', { width: 1, height: 1 }).includes('data-om-three-runtime'));
 });

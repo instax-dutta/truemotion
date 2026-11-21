@@ -43,6 +43,7 @@ locally. This audit closes the RE workstream; remaining gaps are deliberate.
 | 25 | `{{SHADERS}}` / OMShaders CSS utilities | Replaced with equivalent | `src/shaders.js`: local CSS utility layer; `test/shaders.test.js`; `shaders-*.png` golden fixtures |
 | 26 | `{{BRAND:*}}` tokens from scraped brand kits | Replaced with equivalent | `src/brand.js`: state-driven colour variables and inlined logo; `test/brand.test.js`; `brand-*.png` golden fixtures |
 | 27 | `{{COMPONENT:id}}` snippets from brand kits | Replaced with equivalent | `src/components.js`: built-in plus state-defined snippets; `test/components.test.js`; `component-*.png` golden fixtures |
+| 28 | `{{THREE}}` / OM3D WebGL runtime | Replaced with equivalent | `src/three.js`: CSS-3D stage helper; `test/three.test.js`; `three-*.png` golden fixtures |
 
 ## Verification commands
 
@@ -55,9 +56,9 @@ npm pack --dry-run            # published file list
 
 ## Open items
 
-- The `{{THREE}}` token remains unsupported because its bundled 3D runtime is
-  proprietary. Scenes using it are rejected with a clear error rather than
-  silently mis-rendered. `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{BRAND:*}}` and
-  `{{COMPONENT:*}}` are now supported by small local equivalents.
+- All authoring tokens documented in the skill references are now supported by
+  local equivalents. The original WebGL bundle was not copied; `{{THREE}}`
+  provides CSS-3D depth only, so physically lit geometry and material response
+  remain out of scope by design.
 - npm publication is intentionally paused by the user; the package is verified
   packable but not published.

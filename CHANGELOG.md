@@ -34,6 +34,8 @@
   with unit and golden-frame coverage.
 - Added built-in and state-defined `{{COMPONENT:*}}` snippets with unit and
   golden-frame coverage.
+- Added a local CSS-3D `{{THREE}}` helper with unit and golden-frame coverage;
+  all documented authoring tokens are now supported locally.
 
 ## 0.2.0
 

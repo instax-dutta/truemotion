@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { renderFrames } from '../src/render.js';
-import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES, SHADERS_HTML, SHADERS_TIMES, BRAND_HTML, BRAND_TIMES, BRAND, COMPONENT_HTML, COMPONENT_TIMES } from '../test/fixtures/golden-scene.mjs';
+import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES, SHADERS_HTML, SHADERS_TIMES, BRAND_HTML, BRAND_TIMES, BRAND, COMPONENT_HTML, COMPONENT_TIMES, THREE_HTML, THREE_TIMES } from '../test/fixtures/golden-scene.mjs';
 
 const require = createRequire(import.meta.url);
 process.env.TRUEMOTION_CHROME = require('playwright-core').chromium.executablePath();
@@ -21,7 +21,8 @@ const sets = [
   { prefix: 'fx', html: FX_HTML, times: FX_TIMES },
   { prefix: 'shaders', html: SHADERS_HTML, times: SHADERS_TIMES },
   { prefix: 'brand', html: BRAND_HTML, times: BRAND_TIMES, brand: BRAND },
-  { prefix: 'component', html: COMPONENT_HTML, times: COMPONENT_TIMES }
+  { prefix: 'component', html: COMPONENT_HTML, times: COMPONENT_TIMES },
+  { prefix: 'three', html: THREE_HTML, times: THREE_TIMES }
 ];
 
 for (const set of sets) {

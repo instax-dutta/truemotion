@@ -30,9 +30,9 @@ times, so every visible change must be a function of timeline position.
 - Explicit `window.__SCENE_DURATION__` in seconds.
 - Every entrance uses `fromTo()` with both states written out.
 - Tokens `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`,
-  `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{BRAND:*}}` and
-  `{{COMPONENT:*}}` are inlined locally. Never reference a CDN, a web font, or a
-  local file path.
+  `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{THREE}}`,
+  `{{BRAND:*}}` and `{{COMPONENT:*}}` are inlined locally. Never reference a
+  CDN, a web font, or a local file path.
 - Available font families are `Display` (600, 900), `Body` (300, 400) and
   `Mono` (500). No other family names.
 - No emoji. Brand logos come from `{{ICON:slug}}`; generic icons are inline SVG.
@@ -65,5 +65,6 @@ with `read_skill`.
 - [blocks/shaders.md](blocks/shaders.md) - CSS utility layer for `{{SHADERS}}`.
 - [blocks/brand.md](blocks/brand.md) - colour variables and logo for `{{BRAND:*}}`.
 - [blocks/components.md](blocks/components.md) - reusable markup for `{{COMPONENT:*}}`.
+- [blocks/three.md](blocks/three.md) - CSS-3D stage helper for `{{THREE}}`.
 - [patterns/](patterns/) - beat sheets by video type.
 - [examples/](examples/) - complete scene sketches.

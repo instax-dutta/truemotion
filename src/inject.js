@@ -6,6 +6,7 @@ import { FX_SOURCE } from './fx.js';
 import { SHADERS_SOURCE } from './shaders.js';
 import { brandCss, brandValue, brandLogoDataUrl } from './brand.js';
 import { COMPONENT_CSS, resolveComponent } from './components.js';
+import { THREE_SOURCE } from './three.js';
 
 const require = createRequire(import.meta.url);
 
@@ -167,6 +168,10 @@ export function injectSceneHtml(html, { width, height, assetsDir, brand, compone
   if (out.includes('{{SHADERS}}')) out = out.replaceAll('{{SHADERS}}', () => SHADERS_SOURCE);
   if (/\bOMShaders\./.test(out) && !out.includes('data-om-shaders-runtime')) out = injectBeforeFirstScript(out, SHADERS_SOURCE);
 
+  out = out.replace(/<!--\s*\{\{THREE\}\}[^>]*-->/g, () => THREE_SOURCE);
+  if (out.includes('{{THREE}}')) out = out.replaceAll('{{THREE}}', () => THREE_SOURCE);
+  if (/\bOM3D\./.test(out) && !out.includes('data-om-three-runtime')) out = injectBeforeFirstScript(out, THREE_SOURCE);
+
   const gsapTag = `<script>${getGsapSource()}<\/script>`;
   const withTyping = gsapTag + (/\bOMTyping\./.test(out) ? TYPING_SHIM : '');
   out = out.replace(/<!--\s*\{\{GSAP\}\}[^>]*-->/g, () => withTyping);
@@ -177,9 +182,5 @@ export function injectSceneHtml(html, { width, height, assetsDir, brand, compone
   out = out.replace(/\{\{ICON:([^}]+)\}\}/g, (_m, spec) => iconDataUrl(spec.trim()));
   out = out.replace(/\{\{ASSET:([^}]+)\}\}/g, (_m, rel) => assetDataUrl(rel.trim(), assetsDir));
 
-  const unsupported = [...out.matchAll(/\{\{THREE\}\}/g)].map(() => 'THREE');
-  if (unsupported.length) {
-    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}}, {{ASSET:...}}, {{ROUGH}}, {{FX}}, {{SHADERS}}, {{BRAND:*}} and {{COMPONENT:*}}.`);
-  }
   return out;
 }
