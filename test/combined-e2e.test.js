@@ -94,6 +94,37 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     assert.ok(rejected.isError, 'resume with changed state must fail');
     assert.ok(rejected.content.find((b) => b.type === 'text').text.includes('state file changed'));
 
+    // Mutating an ASSET file between checkpoint and resume must also be rejected.
+    const assetsDir = path.join(dir, 'assets');
+    fs.mkdirSync(assetsDir, { recursive: true });
+    const logo = path.join(assetsDir, 'logo.svg');
+    fs.writeFileSync(logo, '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+    const assetState = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    assetState.scenes = [{
+      ...assetState.scenes[0],
+      name: 'Asset scene',
+      html: assetState.scenes[0].html.replace(
+        '<div class="frame">',
+        '<div class="frame"><img src="{{ASSET:logo.svg}}" width="8" height="8" alt="">'
+      )
+    }];
+    fs.writeFileSync(stateFile, JSON.stringify(assetState));
+    const assetOut = path.join(dir, 'asset.mp4');
+    await call('render_video', {
+      out: assetOut, fps: 5, resolution: '540p', batchSize: 2,
+      segmentSize: 4, maxSegments: 1, keepCheckpoints: true
+    });
+    fs.writeFileSync(logo, '<svg xmlns="http://www.w3.org/2000/svg"><rect width="8" height="8"/></svg>');
+    const assetRejected = await client.callTool({
+      name: 'render_video',
+      arguments: {
+        out: assetOut, fps: 5, resolution: '540p', batchSize: 2,
+        segmentSize: 4, resume: true
+      }
+    });
+    assert.ok(assetRejected.isError, 'resume with changed asset must fail');
+    assert.ok(assetRejected.content.find((b) => b.type === 'text').text.includes('state file changed'));
+
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);
   } finally {

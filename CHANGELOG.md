@@ -44,6 +44,7 @@
 - Added a reproducible multi-minute 1080p long-form benchmark with whole-process-tree RSS sampling; confirmed flat memory across 400 and 1200 frames and a 25% RSS reduction at `--concurrency 1`.
 - Added crash-resumable rendering with MPEG-TS segment checkpoints, a byte-verified manifest, `--segment-size`, `--max-segments`, `--resume` and `--keep-checkpoints`, with unit and MCP e2e coverage.
 - Added a scene/brand/component digest to the checkpoint manifest so `--resume` rejects a state file edited since checkpointing.
+- Extended that digest to hash `{{ASSET:...}}` file contents, and fixed `render_video` to pass the assets directory so MCP resumes detect asset edits.
 
 ## 0.2.0
 

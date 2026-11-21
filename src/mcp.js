@@ -271,6 +271,7 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
         resolution: input.resolution,
         crf: input.crf ?? 18,
         audio: input.audio ? path.resolve(baseDir, input.audio) : undefined,
+        assetsDir,
         startSec: input.startSec ?? 0,
         endSec: input.endSec ?? Infinity,
         concurrency: input.concurrency ?? 2,

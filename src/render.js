@@ -355,7 +355,7 @@ export async function renderVideo(state, outPath, {
   const meta = {
     fps, resolution: outputResolution,
     totalFrames: chosen.length, segmentSize: segmentFrames,
-    audio: audio || null, digest: sceneDigest({ ...state, aspect: state.aspect })
+    audio: audio || null, digest: sceneDigest(state, assetsDir)
   };
 
   let manifest = resume ? readManifest(checkpointDir) : null;

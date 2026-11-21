@@ -6,7 +6,7 @@ import path from 'node:path';
 import {
   manifestPath, segmentPath, emptyManifest, writeManifest, readManifest,
   clearCheckpoint, completedIndices, planSegments, manifestCompatible, writeConcatList,
-  sceneDigest, MANIFEST_VERSION
+  sceneDigest, MANIFEST_VERSION, referencedAssets, assetFileHashes
 } from '../src/segments.js';
 
 const sampleState = {
@@ -69,6 +69,28 @@ test('scene digest rejects state changes between checkpoint and resume', () => {
   const manifest = { ...emptyManifest(meta), finalized: false };
   assert.ok(manifestCompatible(manifest, { ...meta, digest }));
   assert.ok(!manifestCompatible(manifest, { ...meta, digest: sceneDigest(changedHtml) }));
+});
+
+test('asset contents are hashed into the digest', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-assets-digest-'));
+  fs.writeFileSync(path.join(dir, 'logo.png'), 'original bytes');
+  const state = {
+    ...sampleState,
+    scenes: [{ ...sampleState.scenes[0], html: '<img src="{{ASSET:logo.png}}">' }]
+  };
+  assert.deepEqual(referencedAssets(state), ['logo.png']);
+  const before = sceneDigest(state, dir);
+  assert.ok(assetFileHashes(state, dir)['logo.png']);
+
+  fs.writeFileSync(path.join(dir, 'logo.png'), 'modified bytes');
+  assert.notEqual(sceneDigest(state, dir), before, 'editing an asset must change the digest');
+  const manifest = { ...emptyManifest(meta), finalized: false, digest: before };
+  assert.ok(!manifestCompatible(manifest, { ...meta, digest: sceneDigest(state, dir) }));
+
+  // Traversal attempts are ignored rather than hashed.
+  const escaping = { ...state, scenes: [{ ...state.scenes[0], html: '<img src="{{ASSET:../secret.png}}">' }] };
+  assert.deepEqual(assetFileHashes(escaping, dir), {});
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('concat list references each completed segment', () => {

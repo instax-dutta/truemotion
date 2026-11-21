@@ -197,7 +197,7 @@ to reproduce it. The npm package itself does not include the rendered demo film.
 Long renders can be split across invocations with `--segment-size` and
 `--max-segments`, then finished with `--resume`. Completed segments are
 checkpointed as MPEG-TS files with a byte-verified manifest, so an interrupted
-render never loses work. The manifest also stores a digest of scenes, brand and
-components, so editing the state file between a partial render and a resume is
-rejected rather than producing a mismatched film. The same options are available
-on the MCP `render_video` tool.
+render never loses work. The manifest also stores a digest of scenes, brand,
+components and `{{ASSET:...}}` file contents, so editing the state file or an
+asset between a partial render and a resume is rejected rather than producing a
+mismatched film. The same options are available on the MCP `render_video` tool.

@@ -4,7 +4,31 @@ import { createHash } from 'node:crypto';
 
 export const MANIFEST_VERSION = 2;
 
-export function sceneDigest(state) {
+export function referencedAssets(state) {
+  const refs = new Set();
+  for (const scene of state.scenes ?? []) {
+    for (const match of String(scene.html ?? '').matchAll(/\{\{ASSET:([^}]+)\}\}/g)) {
+      refs.add(match[1].trim());
+    }
+  }
+  return [...refs].sort();
+}
+
+export function assetFileHashes(state, assetsDir) {
+  const hashes = {};
+  if (!assetsDir) return hashes;
+  const root = path.resolve(assetsDir);
+  for (const ref of referencedAssets(state)) {
+    const safe = String(ref).replace(/\\/g, '/').replace(/^\/+/, '');
+    if (safe.includes('..')) continue;
+    const file = path.resolve(root, safe);
+    if (!file.startsWith(root + path.sep) || !fs.existsSync(file)) continue;
+    hashes[ref] = createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  }
+  return hashes;
+}
+
+export function sceneDigest(state, assetsDir) {
   const canonical = {
     aspect: state.aspect,
     brand: state.brand ?? {},
@@ -12,7 +36,8 @@ export function sceneDigest(state) {
     scenes: (state.scenes ?? []).map((scene) => ({
       id: scene.id, name: scene.name,
       durationSec: scene.durationSec, html: scene.html
-    }))
+    })),
+    assets: assetFileHashes(state, assetsDir)
   };
   return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
 }
