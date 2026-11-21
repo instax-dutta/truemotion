@@ -30,6 +30,14 @@ npx playwright install chromium   # only if Chromium is not already cached
 
 You need `ffmpeg` on `PATH` only for `render` (preview frames during MCP writes do not use it).
 
+If Chrome or Chromium is already installed, TrueMotion can use it directly and you can skip the Playwright browser download:
+
+```bash
+export TRUEMOTION_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+# or pass --chrome <path> to render/serve
+truemotion doctor   # reports which browser will be used
+```
+
 ## Use with any harness
 
 Create a state file, then point your harness at the stdio server:

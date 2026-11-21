@@ -28,7 +28,8 @@ function help() {
 Usage:
   truemotion init [state.json] [--aspect 16:9|9:16|1:1] [--resolution 1080p|720p|540p]
   truemotion serve --state <state.json> [--skill <dir>] [--assets <dir>] [--no-preview]
-  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--audio <file>] [--assets <dir>]
+  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--audio <file>] [--assets <dir>] [--chrome <path>]
+  truemotion serve --state <state.json> [--chrome <path>]        # reuses system Chrome if set
   truemotion install-skill <target-dir>
   truemotion doctor
 
@@ -53,6 +54,7 @@ async function main() {
   }
 
   if (command === 'serve') {
+    if (opts.chrome) process.env.TRUEMOTION_CHROME = path.resolve(opts.chrome);
     const skillDir = resolveSkillDir(opts.skill);
     await startServer({
       stateFile: path.resolve(stateFile),
@@ -70,6 +72,7 @@ async function main() {
       fps: Number(opts.fps || 30),
       crf: Number(opts.crf || 18),
       resolution: opts.resolution || undefined,
+      chrome: opts.chrome ? path.resolve(opts.chrome) : undefined,
       audio: opts.audio ? path.resolve(opts.audio) : undefined,
       assetsDir: opts.assets ? path.resolve(opts.assets) : path.join(path.dirname(path.resolve(stateFile)), 'assets')
     });
@@ -85,15 +88,27 @@ async function main() {
   }
 
   if (command === 'doctor') {
+    const { spawnSync } = await import('node:child_process');
+    const { findSystemChrome, browserOptions } = await import('../src/browser.js');
     const checks = [];
-    const nodeVer = process.version;
-    checks.push(`node ${nodeVer} (>=20 required)`);
-    let ffmpegOk = false;
-    try { const r = (await import('node:child_process')).spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' }); ffmpegOk = r.status === 0; } catch {}
-    checks.push(`ffmpeg: ${ffmpegOk ? 'ok' : 'MISSING (needed for render)'}`);
-    let pwOk = false;
-    try { await import('playwright'); pwOk = true; } catch {}
-    checks.push(`playwright: ${pwOk ? 'ok' : 'MISSING'}`);
+    const major = Number(process.versions.node.split('.')[0]);
+    checks.push(`node ${process.version}: ${major >= 20 ? 'ok' : 'UNSUPPORTED (20+ required)'}`);
+    const ffmpeg = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
+    checks.push(`ffmpeg: ${ffmpeg.status === 0 ? 'ok' : 'MISSING (needed for render)'}`);
+    let pwExecutable = null;
+    try {
+      const { chromium } = await import('playwright');
+      pwExecutable = chromium.executablePath();
+      checks.push(`playwright: ok (${pwExecutable})`);
+    } catch { checks.push('playwright: MISSING'); }
+    const systemChrome = findSystemChrome();
+    checks.push(`system chrome: ${systemChrome ?? 'none found'}`);
+    const explicit = browserOptions().executablePath;
+    const chosen = explicit ?? pwExecutable;
+    checks.push(`browser in use: ${chosen ?? 'NONE - run npx playwright install chromium'}`);
+    if (!explicit && !pwExecutable && systemChrome) {
+      checks.push(`hint: export TRUEMOTION_CHROME="${systemChrome}" to use the installed Chrome`);
+    }
     console.log(checks.join('\n'));
     return;
   }

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { chromium } from 'playwright';
+import { launchBrowser } from './browser.js';
 import { injectSceneHtml } from './inject.js';
 import { dimensions } from './state.js';
 import { diffPng, percent } from './diff.js';
@@ -12,10 +12,10 @@ const DEAD_RATIO = 0.003;
 const CUT_WARN = 0.06;
 const CUT_REJECT = 0.18;
 
-async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir } = {}) {
+async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, chrome } = {}) {
   const [width, height] = dimensions(aspect, resolution);
   const injected = injectSceneHtml(html, { width, height, assetsDir });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowser(chrome);
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
   const requests = new Set();
   const errors = [];
@@ -86,8 +86,8 @@ async function layoutIssues(page, width, height) {
   }, { width, height });
 }
 
-async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, actorTimeSec } = {}) {
-  const ctx = await openScene(html, { aspect, resolution, assetsDir });
+async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, chrome, actorTimeSec } = {}) {
+  const ctx = await openScene(html, { aspect, resolution, assetsDir, chrome });
   try {
     const info = await ctx.page.evaluate(() => ({
       duration: window.__SCENE_DURATION__,
@@ -135,16 +135,16 @@ async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSe
   }
 }
 
-export async function renderFrames(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir } = {}) {
-  const result = await probeScene(html, { aspect, resolution, timesSec, assetsDir });
+export async function renderFrames(html, { aspect = '16:9', resolution = '1080p', timesSec = [], assetsDir, chrome } = {}) {
+  const result = await probeScene(html, { aspect, resolution, timesSec, assetsDir, chrome });
   return result.frames;
 }
 
-export async function sceneNotes(scene, state, { assetsDir } = {}) {
+export async function sceneNotes(scene, state, { assetsDir, chrome } = {}) {
   const duration = scene.durationSec;
   const times = [duration * 0.1, duration * 0.5, duration * 0.9];
   try {
-    const probe = await probeScene(scene.html, { aspect: state.aspect, resolution: state.resolution, timesSec: times, assetsDir });
+    const probe = await probeScene(scene.html, { aspect: state.aspect, resolution: state.resolution, timesSec: times, assetsDir, chrome });
     const notes = [];
     const [a, b, c] = probe.frames;
     if (a && b && c) {
@@ -184,10 +184,11 @@ export async function reviewFrames(scene, state, opts = {}) {
   return (await sceneNotes(scene, state, opts)).blocks;
 }
 
-export async function actorExitStates(scene, state, { assetsDir } = {}) {
+export async function actorExitStates(scene, state, { assetsDir, chrome } = {}) {
   const probe = await probeScene(scene.html, {
     aspect: state.aspect,
     resolution: state.resolution,
+    chrome,
     timesSec: [],
     assetsDir,
     actorTimeSec: scene.durationSec
@@ -195,11 +196,11 @@ export async function actorExitStates(scene, state, { assetsDir } = {}) {
   return probe.actors ?? [];
 }
 
-export async function matchedCut(previous, candidate, state, { assetsDir } = {}) {
+export async function matchedCut(previous, candidate, state, { assetsDir, chrome } = {}) {
   try {
     const [prev, next] = await Promise.all([
-      probeScene(previous.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [previous.durationSec], assetsDir }),
-      probeScene(candidate.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [0], assetsDir })
+      probeScene(previous.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [previous.durationSec], assetsDir, chrome }),
+      probeScene(candidate.html, { aspect: state.aspect, resolution: state.resolution, timesSec: [0], assetsDir, chrome })
     ]);
     const diff = diffPng(prev.frames[0].base64Png, next.frames[0].base64Png);
     return {
@@ -213,7 +214,7 @@ export async function matchedCut(previous, candidate, state, { assetsDir } = {})
   }
 }
 
-export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, crf = 18 } = {}) {
+export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, chrome, crf = 18 } = {}) {
   const outputResolution = resolution || state.resolution || '1080p';
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-'));
   let index = 0;
@@ -221,7 +222,7 @@ export async function renderVideo(state, outPath, { fps = 30, resolution, assets
     for (const scene of state.scenes) {
       const count = Math.max(1, Math.ceil(scene.durationSec * fps));
       const times = Array.from({ length: count }, (_, i) => i / fps);
-      const frames = await renderFrames(scene.html, { aspect: state.aspect, resolution: outputResolution, timesSec: times, assetsDir });
+      const frames = await renderFrames(scene.html, { aspect: state.aspect, resolution: outputResolution, timesSec: times, assetsDir, chrome });
       for (const frame of frames) {
         index += 1;
         fs.writeFileSync(path.join(temp, `frame-${String(index).padStart(6, '0')}.png`), Buffer.from(frame.base64Png, 'base64'));
