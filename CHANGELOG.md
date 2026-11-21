@@ -66,6 +66,7 @@
 - Added per-segment SHA-256 digests to checkpoint manifests so same-size segment corruption is detected and re-encoded; re-encoded segments replace their manifest entry and finalization refuses duplicate indices. Audio-bed resume validation now also covers same-size corruption and confirms rejected resumes leave finalized films untouched.
 - Included `sketchRefs` metadata and sketch PNG contents in the checkpoint digest, with unit and opt-in CLI coverage for both reference and file changes.
 - Added an opt-in combined-mutation test proving simultaneous state, asset, audio and segment corruption is rejected without side effects.
+- Added an opt-in mixed-checkpoint recovery test proving valid segments are reused while same-size corruption and orphan partials are re-encoded.
 - Added a nightly performance/memory regression guard for the 1200-frame long-form render with documented fps, RSS and output-size thresholds, calibrated from real nightly runs, plus a fast 160-frame 540p smoke guard on every push CI run.
 
 ## 0.2.0

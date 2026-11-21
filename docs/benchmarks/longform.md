@@ -145,3 +145,8 @@ and a resume is rejected. `npm run test:sketch-resume` verifies both cases.
 `npm run test:combined-mutation` mutates state, asset, audio and a checkpoint
 segment simultaneously and verifies resume fails without producing a film,
 writing a manifest or touching the corrupted segment.
+`npm run test:mixed-checkpoint` covers the recovery path: a checkpoint with one
+valid segment, one same-size corrupted segment and one orphan partial file is
+resumed, and the test asserts the valid segment is reused unchanged, only the
+invalid ones are re-encoded, and the final 60-frame film has exactly three
+manifest entries each matching its digest.

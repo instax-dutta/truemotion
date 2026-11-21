@@ -70,6 +70,7 @@
     "test:segment-corruption": "TRUEMOTION_SEGMENT_CORRUPTION=1 node --test test/segment-corruption.test.js",
     "test:sketch-resume": "TRUEMOTION_SKETCH_RESUME=1 node --test test/sketch-resume.test.js",
     "test:combined-mutation": "TRUEMOTION_COMBINED_MUTATION=1 node --test test/combined-mutation-resume.test.js",
+    "test:mixed-checkpoint": "TRUEMOTION_MIXED_CHECKPOINT=1 node --test test/mixed-checkpoint-recovery.test.js",
     "check": "node --test test/*.test.js && npm pack --dry-run",
     "prepack": "node --test test/*.test.js && node scripts/verify-tarball.mjs"
   },
