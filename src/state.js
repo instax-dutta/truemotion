@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { frameBackground } from './validate.js';
 
@@ -23,19 +24,21 @@ export function createState({ aspect = '16:9', projectId = 'default' } = {}) {
   };
 }
 
-export function loadState(path) {
-  if (!fs.existsSync(path)) throw new Error(`State file not found: ${path}`);
-  return JSON.parse(fs.readFileSync(path, 'utf8'));
+export function loadState(file) {
+  if (!fs.existsSync(file)) throw new Error(`State file not found: ${file}`);
+  const raw = fs.readFileSync(file, 'utf8');
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch (e) { throw new Error(`Invalid state JSON in ${file}: ${e.message}`); }
+  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.scenes)) throw new Error(`Invalid state shape in ${file}: missing scenes array`);
+  return parsed;
 }
 
-export function saveState(path, state) {
-  fs.mkdirSync(dirnameOf(path), { recursive: true });
-  fs.writeFileSync(path, JSON.stringify(state, null, 2));
-}
-
-function dirnameOf(path) {
-  const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-  return i < 0 ? '.' : path.slice(0, i) || '.';
+export function saveState(file, state) {
+  const dir = path.dirname(path.resolve(file));
+  fs.mkdirSync(dir, { recursive: true });
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
+  fs.renameSync(tmp, file);
 }
 
 export function sceneMetadata(scenes) {
