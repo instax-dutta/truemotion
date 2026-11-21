@@ -14,6 +14,9 @@ test('browser options prefer an explicit chrome path', () => {
 test('browser options are minimal without a chrome override', () => {
   const previous = process.env[CHROME_ENV];
   delete process.env[CHROME_ENV];
-  assert.deepEqual(browserOptions(), { headless: true });
+  const options = browserOptions();
+  assert.equal(options.headless, true);
+  assert.ok(options.args.includes('--force-color-profile=srgb'));
+  assert.equal(options.executablePath, undefined);
   if (previous !== undefined) process.env[CHROME_ENV] = previous;
 });

@@ -87,7 +87,7 @@ node bin/truemotion.mjs render --state truemotion-state.json --out draft.mp4 --r
 node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --audio music.mp3
 ```
 
-`--crf` defaults to 18 (higher quality than ffmpeg's default). `--audio` loops the file, fades it in and out, and cuts it to the video length.
+`--concurrency N` renders frames on N browser pages in parallel and is the main speed control (default 2). Frame order is preserved exactly; content is seek-deterministic, though subpixel antialiasing can vary marginally with the number of concurrent pages. `--crf` defaults to 18 (higher quality than ffmpeg's default). `--audio` loops the file, fades it in and out, and cuts it to the video length.
 
 For frame-accurate QA without ffmpeg, export a single PNG:
 

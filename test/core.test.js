@@ -6,6 +6,7 @@ import { createState, addScene, patchScene, dimensions, findScene } from '../src
 import { validateSceneHtml, evolveWarnings } from '../src/validate.js';
 import { skillPath, listSkillFiles } from '../src/skill.js';
 import { injectSceneHtml } from '../src/inject.js';
+import { chunkTimes } from '../src/render.js';
 
 const MINIMAL = `<!doctype html><html><head><style>/* {{FONTS_CSS}} */ .frame{width:{{W}}px;height:{{H}}px;background:#000}</style></head>
 <body><div class="frame" id="frame"><h1 data-om-id="headline">Hi</h1></div>
@@ -43,6 +44,13 @@ test('state add and patch keep scenes consistent', () => {
   const ok = patchScene(s, scene.id, [{ find: '>Hi<', replace: '>Hello<' }]);
   assert.ok(ok.html.includes('>Hello<'));
   assert.ok(scene.html.includes('>Hi<'));
+});
+
+test('chunkTimes distributes frames without gaps or duplicates', () => {
+  const groups = chunkTimes(10, 3);
+  assert.deepEqual(groups.map((g) => g.length), [4, 3, 3]);
+  assert.deepEqual(groups.flat().sort((a, b) => a - b), [...Array(10).keys()]);
+  assert.deepEqual(chunkTimes(1, 4), [[0], [], [], []]);
 });
 
 test('findScene accepts id, 1-based index, or defaults to first', () => {

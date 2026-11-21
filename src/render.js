@@ -12,10 +12,18 @@ const DEAD_RATIO = 0.003;
 const CUT_WARN = 0.06;
 const CUT_REJECT = 0.18;
 
-async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, chrome } = {}) {
+export function chunkTimes(count, concurrency) {
+  const groups = Array.from({ length: concurrency }, () => []);
+  for (let i = 0; i < count; i += 1) {
+    groups[Math.min(concurrency - 1, Math.floor((i * concurrency) / count))].push(i);
+  }
+  return groups;
+}
+
+async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, chrome } = {}, existingBrowser) {
   const [width, height] = dimensions(aspect, resolution);
   const injected = injectSceneHtml(html, { width, height, assetsDir });
-  const browser = await launchBrowser(chrome);
+  const browser = existingBrowser ?? await launchBrowser(chrome);
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
   const requests = new Set();
   const errors = [];
@@ -140,6 +148,28 @@ export async function renderFrames(html, { aspect = '16:9', resolution = '1080p'
   return result.frames;
 }
 
+async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, concurrency }) {
+  const count = Math.min(Math.max(1, concurrency), Math.max(1, timesSec.length));
+  const pages = await Promise.all(
+    Array.from({ length: count }, () => openScene(html, { aspect, resolution, assetsDir }, browser))
+  );
+  try {
+    const groups = chunkTimes(timesSec.length, count);
+    const batches = await Promise.all(pages.map(async (ctx, worker) => {
+      const duration = await ctx.page.evaluate(() => window.__SCENE_DURATION__);
+      const rendered = [];
+      for (const index of groups[worker]) {
+        await seek(ctx.page, timesSec[index], duration);
+        rendered.push({ index, base64Png: await capture(ctx.page) });
+      }
+      return rendered;
+    }));
+    return batches.flat().sort((a, b) => a.index - b.index).map((frame) => frame.base64Png);
+  } finally {
+    await Promise.all(pages.map((ctx) => ctx.page.close()));
+  }
+}
+
 export async function sceneNotes(scene, state, { assetsDir, chrome } = {}) {
   const duration = scene.durationSec;
   const times = [duration * 0.1, duration * 0.5, duration * 0.9];
@@ -214,18 +244,21 @@ export async function matchedCut(previous, candidate, state, { assetsDir, chrome
   }
 }
 
-export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, chrome, crf = 18 } = {}) {
+export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, chrome, concurrency = 2, crf = 18 } = {}) {
   const outputResolution = resolution || state.resolution || '1080p';
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-'));
+  const browser = await launchBrowser(chrome);
   let index = 0;
   try {
     for (const scene of state.scenes) {
       const count = Math.max(1, Math.ceil(scene.durationSec * fps));
       const times = Array.from({ length: count }, (_, i) => i / fps);
-      const frames = await renderFrames(scene.html, { aspect: state.aspect, resolution: outputResolution, timesSec: times, assetsDir, chrome });
+      const frames = await renderFramesParallel(browser, scene.html, {
+        aspect: state.aspect, resolution: outputResolution, timesSec: times, assetsDir, concurrency
+      });
       for (const frame of frames) {
         index += 1;
-        fs.writeFileSync(path.join(temp, `frame-${String(index).padStart(6, '0')}.png`), Buffer.from(frame.base64Png, 'base64'));
+        fs.writeFileSync(path.join(temp, `frame-${String(index).padStart(6, '0')}.png`), Buffer.from(frame, 'base64'));
       }
     }
     fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
@@ -244,6 +277,7 @@ export async function renderVideo(state, outPath, { fps = 30, resolution, assets
     if (result.status !== 0) throw new Error(`ffmpeg failed: ${(result.stderr || '').slice(-1000)}`);
     return { frames: index, output: path.resolve(outPath) };
   } finally {
+    await browser.close();
     fs.rmSync(temp, { recursive: true, force: true });
   }
 }

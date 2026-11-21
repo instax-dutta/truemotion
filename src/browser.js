@@ -15,9 +15,11 @@ export function findSystemChrome() {
   return CANDIDATES.find((candidate) => fs.existsSync(candidate)) ?? null;
 }
 
+const CHROME_ARGS = ['--force-color-profile=srgb', '--disable-lcd-text'];
+
 export function browserOptions(override) {
   const executablePath = override || process.env[CHROME_ENV] || undefined;
-  return executablePath ? { headless: true, executablePath } : { headless: true };
+  return { headless: true, args: CHROME_ARGS, ...(executablePath ? { executablePath } : {}) };
 }
 
 export async function launchBrowser(override) {
