@@ -8,7 +8,9 @@ beat.
    receive the full HTML, a guide, and measured exit states.
 2. Copy the HTML into your draft. Do not start from an empty document.
 3. Keep the `.frame` background declaration unchanged.
-4. Keep the same `data-om-id` values for actors that remain visible.
+4. Keep the same `data-om-id` values for actors that remain visible. If an
+   actor only appears in `pathActors`, give it a `data-om-id` in both scenes so
+   its continuity is explicit.
 5. Add `tl.set()` calls at time zero using the exact exit values. For example:
    `tl.set('[data-om-id="headline"]', { x: 0, y: -120, scale: 0.6, opacity: 1 }, 0);`
 6. Add the new beat's tweens after those locks. Give new actors fresh ids.

@@ -56,8 +56,9 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
         const actors = await actorExitStates(scene, state, { assetsDir });
         if (actors.length) {
           payload.computedExitStates = {
-            note: 'Measured in a real browser at this scene\'s final frame. Lock each continuing data-om-id actor at t=0 in the evolved scene with tl.set(\'[data-om-id="ID"]\', { x, y, scale, rotation, opacity }, 0) using these exact values so frame 0 matches this exit frame. left/top/width/height are the rendered rect for sanity checks. visible:false actors ended hidden; do not show them at t=0.',
-            actors
+            note: 'Measured in a real browser at this scene\'s final frame. Lock each continuing actor at t=0 with tl.set() using these exact values so frame 0 matches this exit frame. Actors with labelled:true have a data-om-id; pathActors were inferred from their DOM path because they had none. rect is the rendered box for sanity checks. visible:false actors ended hidden; do not show them at t=0.',
+            actors: actors.filter((actor) => actor.labelled),
+            pathActors: actors.filter((actor) => !actor.labelled)
           };
         }
       } catch (e) {

@@ -6,6 +6,7 @@ import { launchBrowser } from './browser.js';
 import { injectSceneHtml } from './inject.js';
 import { dimensions } from './state.js';
 import { diffPng, percent } from './diff.js';
+import { PATH_ID_SOURCE } from './pathid.js';
 
 const STATIC_RATIO = 0.005;
 const DEAD_RATIO = 0.003;
@@ -130,21 +131,35 @@ async function probeScene(html, { aspect = '16:9', resolution = '1080p', timesSe
     let actors = null;
     if (actorTimeSec !== undefined) {
       await seek(ctx.page, actorTimeSec, info.duration);
-      actors = await ctx.page.evaluate(() => [...document.querySelectorAll('[data-om-id]')].map((el) => {
-        const r = el.getBoundingClientRect();
-        const get = (name) => {
-          const value = window.gsap?.getProperty(el, name);
-          return typeof value === 'number' ? Number(value.toFixed(2)) : value;
+      await ctx.page.addScriptTag({ content: PATH_ID_SOURCE });
+      actors = await ctx.page.evaluate(() => {
+        const describe = (el, labelled) => {
+          const r = el.getBoundingClientRect();
+          const get = (name) => {
+            const value = window.gsap?.getProperty(el, name);
+            return typeof value === 'number' ? Number(value.toFixed(2)) : value;
+          };
+          const cs = getComputedStyle(el);
+          return {
+            id: labelled ? el.getAttribute('data-om-id') : window.omPathId(el),
+            pathId: window.omPathId(el),
+            labelled,
+            x: get('x'), y: get('y'), scale: get('scale'),
+            rotation: get('rotation'), opacity: get('opacity'),
+            rect: { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) },
+            visible: cs.opacity !== '0' && cs.visibility !== 'hidden'
+          };
         };
-        const cs = getComputedStyle(el);
-        return {
-          id: el.getAttribute('data-om-id'),
-          x: get('x'), y: get('y'), scale: get('scale'),
-          rotation: get('rotation'), opacity: get('opacity'),
-          rect: { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) },
-          visible: cs.opacity !== '0' && cs.visibility !== 'hidden'
-        };
-      }));
+        const labelled = [...document.querySelectorAll('[data-om-id]')].map((el) => describe(el, true));
+        const known = new Set(labelled.map((actor) => actor.pathId));
+        const textLeaves = [...document.querySelectorAll('.frame *')].filter((el) =>
+          el.children.length === 0 && el.textContent.trim() && !el.hasAttribute('data-om-id')
+        );
+        const pathActors = textLeaves.map((el) => describe(el, false))
+          .filter((actor) => !known.has(actor.pathId))
+          .slice(0, 40);
+        return [...labelled, ...pathActors];
+      });
     }
     return {
       frames,

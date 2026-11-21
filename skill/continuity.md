@@ -33,6 +33,12 @@ for a small percentage.
 
 ## Actors that end hidden
 
+`computedExitStates` splits actors into two lists. `actors` are labelled with
+`data-om-id`; `pathActors` were inferred from their DOM path because they were
+not labelled. A path looks like `om/div.card@0/h1@0`. Prefer adding a
+`data-om-id` to any actor you intend to continue; the path list exists so an
+unlabelled element can still be identified and given an id in the evolved copy.
+
 If an actor's exit state reports `visible: false`, do not show it at frame zero
 of the next scene. Reintroducing it later is a new entrance.
 
