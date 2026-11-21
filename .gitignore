@@ -9,3 +9,4 @@ assets/
 examples/out/
 examples/pro-out/*
 !examples/pro-out/pro-demo.mp4
+!examples/pro-out/state.json
