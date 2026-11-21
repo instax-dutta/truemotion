@@ -1,8 +1,5 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { launchBrowser } from './browser.js';
+import { createEncoder } from './encode.js';
 import { injectSceneHtml } from './inject.js';
 import { dimensions } from './state.js';
 import { diffPng, percent } from './diff.js';
@@ -184,23 +181,30 @@ export async function renderFrames(html, { aspect = '16:9', resolution = '1080p'
   return result.frames;
 }
 
-async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, brand, components, concurrency }) {
+async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, brand, components, concurrency, batchSize = timesSec.length, onBatch }) {
   const count = Math.min(Math.max(1, concurrency), Math.max(1, timesSec.length));
+  // Pages live for the whole scene, not one batch: page setup dominates the
+  // cost of short scenes, while batching still bounds in-memory frame buffers.
   const pages = await Promise.all(
     Array.from({ length: count }, () => openScene(html, { aspect, resolution, assetsDir, brand, components }, browser))
   );
   try {
-    const groups = chunkTimes(timesSec.length, count);
-    const batches = await Promise.all(pages.map(async (ctx, worker) => {
-      const duration = await ctx.page.evaluate(() => window.__SCENE_DURATION__);
-      const rendered = [];
-      for (const index of groups[worker]) {
-        await seek(ctx.page, timesSec[index], duration);
-        rendered.push({ index, base64Png: await capture(ctx.page) });
-      }
-      return rendered;
-    }));
-    return batches.flat().sort((a, b) => a.index - b.index).map((frame) => frame.base64Png);
+    const duration = await pages[0].page.evaluate(() => window.__SCENE_DURATION__);
+    const size = Math.max(1, Math.floor(batchSize));
+    let renderedCount = 0;
+    for (let start = 0; start < timesSec.length; start += size) {
+      const batchTimes = timesSec.slice(start, start + size);
+      const results = new Array(batchTimes.length);
+      await Promise.all(pages.map(async (ctx, worker) => {
+        for (let i = worker; i < batchTimes.length; i += count) {
+          await seek(ctx.page, batchTimes[i], duration);
+          results[i] = await capture(ctx.page);
+        }
+      }));
+      if (onBatch) await onBatch(results);
+      renderedCount += results.length;
+    }
+    return renderedCount;
   } finally {
     await Promise.all(pages.map((ctx) => ctx.page.close()));
   }
@@ -282,48 +286,49 @@ export async function matchedCut(previous, candidate, state, { assetsDir, chrome
   }
 }
 
-export async function renderVideo(state, outPath, { fps = 30, resolution, assetsDir, audio, chrome, concurrency = 2, startSec = 0, endSec = Infinity, crf = 18 } = {}) {
+export async function renderVideo(state, outPath, {
+  fps = 30, resolution, assetsDir, audio, chrome, concurrency = 2,
+  startSec = 0, endSec = Infinity, crf = 18, batchSize = 30
+} = {}) {
   const outputResolution = resolution || state.resolution || '1080p';
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-'));
+  const size = Math.max(1, Math.floor(batchSize));
+  const chosen = selectFrames(state.scenes, fps, startSec, endSec);
+  if (!chosen.length) throw new Error('No frames in the requested range.');
+
+  const byScene = new Map();
+  for (const frame of chosen) {
+    if (!byScene.has(frame.sceneIndex)) byScene.set(frame.sceneIndex, []);
+    byScene.get(frame.sceneIndex).push(frame);
+  }
+
+  const encoder = createEncoder({
+    fps, audio, crf, outPath, totalSeconds: chosen.length / fps
+  });
   const browser = await launchBrowser(chrome);
   let index = 0;
   try {
-    const chosen = selectFrames(state.scenes, fps, startSec, endSec);
-    if (!chosen.length) throw new Error('No frames in the requested range.');
-    const byScene = new Map();
-    for (const frame of chosen) {
-      if (!byScene.has(frame.sceneIndex)) byScene.set(frame.sceneIndex, []);
-      byScene.get(frame.sceneIndex).push(frame);
-    }
     for (const [sceneIndex, framesToRender] of [...byScene.entries()].sort((a, b) => a[0] - b[0])) {
       const scene = state.scenes[sceneIndex];
-      const frames = await renderFramesParallel(browser, scene.html, {
+      await renderFramesParallel(browser, scene.html, {
         aspect: state.aspect, resolution: outputResolution,
-        timesSec: framesToRender.map((f) => f.time), assetsDir, brand: state.brand, components: state.components, concurrency
+        timesSec: framesToRender.map((f) => f.time), assetsDir,
+        brand: state.brand, components: state.components,
+        concurrency, batchSize: size,
+        onBatch: async (frames) => {
+          for (const frame of frames) {
+            await encoder.write(Buffer.from(frame, 'base64'));
+            index += 1;
+          }
+        }
       });
-      for (const frame of frames) {
-        index += 1;
-        fs.writeFileSync(path.join(temp, `frame-${String(index).padStart(6, '0')}.png`), Buffer.from(frame, 'base64'));
-      }
     }
-    fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
-    const args = ['-y', '-framerate', String(fps), '-i', path.join(temp, 'frame-%06d.png')];
-    if (audio && fs.existsSync(audio)) {
-      const total = index / fps;
-      const fadeOut = Math.max(0, total - 0.6);
-      args.push('-stream_loop', '-1', '-i', audio);
-      args.push('-c:v', 'libx264', '-crf', String(crf), '-pix_fmt', 'yuv420p');
-      args.push('-c:a', 'aac', '-af', `afade=t=in:st=0:d=0.6,afade=t=out:st=${fadeOut}:d=0.6`, '-shortest');
-    } else {
-      args.push('-c:v', 'libx264', '-crf', String(crf), '-pix_fmt', 'yuv420p');
-    }
-    args.push('-movflags', '+faststart', path.resolve(outPath));
-    const result = spawnSync('ffmpeg', args, { encoding: 'utf8' });
-    if (result.status !== 0) throw new Error(`ffmpeg failed: ${(result.stderr || '').slice(-1000)}`);
-    return { frames: index, output: path.resolve(outPath) };
+    await encoder.finish();
+    return { frames: index, output: outPath };
+  } catch (error) {
+    await encoder.finish().catch(() => {});
+    throw error;
   } finally {
     await browser.close();
-    fs.rmSync(temp, { recursive: true, force: true });
   }
 }
 

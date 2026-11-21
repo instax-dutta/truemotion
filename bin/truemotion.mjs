@@ -31,7 +31,7 @@ function help() {
 Usage:
   truemotion init [state.json] [--aspect 16:9|9:16|1:1] [--resolution 1080p|720p|540p]
   truemotion serve --state <state.json> [--skill <dir>] [--assets <dir>] [--no-preview]
-  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--concurrency 2] [--start 4 --end 8] [--audio <file>] [--assets <dir>] [--chrome <path>]
+  truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--concurrency 2] [--batch-size 30] [--start 4 --end 8] [--audio <file>] [--assets <dir>] [--chrome <path>]
   truemotion serve --state <state.json> [--chrome <path>]        # reuses system Chrome if set
   truemotion still --state <state.json> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]
   truemotion optimize-assets <dir> [--max-dimension 2200] [--min-bytes 921600]
@@ -80,6 +80,7 @@ async function main() {
       resolution: opts.resolution || undefined,
       chrome: opts.chrome ? path.resolve(opts.chrome) : undefined,
       concurrency: Math.max(1, Number(opts.concurrency || 2)),
+      batchSize: Math.max(1, Number(opts.batchSize || 30)),
       startSec: Number(opts.start || 0),
       endSec: opts.end === true ? Infinity : Number(opts.end || Infinity),
       audio: opts.audio ? path.resolve(opts.audio) : undefined,

@@ -38,6 +38,9 @@
   all documented authoring tokens are now supported locally.
 - Added a shared all-token scene used by the shipped demo and an MCP end-to-end
   regression, with golden fixtures proving every helper works together.
+- Replaced disk-staged rendering with bounded, backpressure-aware frame streaming
+  into ffmpeg via `image2pipe`. Added `--batch-size` / `batchSize`, encoder unit
+  tests, an e2e streaming regression and a long-form benchmark with peak RSS.
 
 ## 0.2.0
 

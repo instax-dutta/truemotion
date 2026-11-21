@@ -37,6 +37,16 @@ function firstLine(command, args) {
   return result.status === 0 ? (result.stdout || '').split('\n')[0] : 'unavailable';
 }
 
+function sampleRss(promise, onSample) {
+  let peak = 0;
+  const timer = setInterval(() => {
+    const rss = process.memoryUsage().rss;
+    if (rss > peak) peak = rss;
+    onSample?.(rss);
+  }, 50);
+  return promise.finally(() => clearInterval(timer)).then((value) => ({ value, peakRss: peak }));
+}
+
 function sourceFootprint() {
   let bytes = 0;
   let files = 0;
@@ -64,6 +74,8 @@ const configurations = [
   { resolution: '540p', concurrency: 4 }
 ];
 
+const LONG_FORM = { frames: 240, fps: 10, resolution: '540p', batchSize: 12, concurrency: 2 };
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-bench-'));
 const results = [];
 try {
@@ -77,6 +89,25 @@ try {
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
+
+const longDir = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-long-'));
+const longOut = path.join(longDir, 'long.mp4');
+const longState = makeState();
+longState.scenes[0].durationSec = LONG_FORM.frames / LONG_FORM.fps;
+const longStart = performance.now();
+const sampled = await sampleRss(renderVideo(longState, longOut, {
+  fps: LONG_FORM.fps, resolution: LONG_FORM.resolution,
+  batchSize: LONG_FORM.batchSize, concurrency: LONG_FORM.concurrency, crf: 23
+}));
+const longSeconds = (performance.now() - longStart) / 1000;
+const longResult = {
+  frames: sampled.value.frames,
+  seconds: longSeconds,
+  framesPerSecond: sampled.value.frames / longSeconds,
+  peakRssMib: sampled.peakRss / 1024 / 1024,
+  bytes: fs.statSync(longOut).size
+};
+fs.rmSync(longDir, { recursive: true, force: true });
 
 const packed = spawnSync('npm', ['pack', '--dry-run', '--json'], { cwd: root, encoding: 'utf8' });
 let packInfo = null;
@@ -97,6 +128,14 @@ lines.push('| --- | --- | --- | --- |');
 for (const r of results) {
   lines.push(`| ${r.resolution} | ${r.concurrency} | ${r.seconds.toFixed(2)} | ${r.framesPerSecond.toFixed(1)} |`);
 }
+lines.push('');
+lines.push('## Long-form streaming (240 frames, 540p, 10 fps, batch size 12)');
+lines.push('');
+lines.push(`- Frames rendered: ${longResult.frames}`);
+lines.push(`- Elapsed: ${longResult.seconds.toFixed(2)}s (${longResult.framesPerSecond.toFixed(1)} frames/s)`);
+lines.push(`- Peak process RSS: ${longResult.peakRssMib.toFixed(0)} MiB`);
+lines.push(`- Output size: ${(longResult.bytes / 1024).toFixed(0)} KiB`);
+lines.push('- Frames are piped to ffmpeg in bounded batches; no full-frame staging directory is written.');
 lines.push('');
 lines.push('## Footprint');
 lines.push('');

@@ -254,7 +254,8 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
       audio: z.string().optional().describe('Optional music bed; relative paths resolve beside the state file.'),
       startSec: z.number().min(0).optional(),
       endSec: z.number().positive().optional(),
-      concurrency: z.number().int().min(1).max(16).optional()
+      concurrency: z.number().int().min(1).max(16).optional(),
+      batchSize: z.number().int().min(1).max(500).optional().describe('Frames held in memory per streaming batch. Lower for long videos on small machines.')
     })
   }, async (input) => withState(async (state) => {
     try {
@@ -268,7 +269,8 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
         audio: input.audio ? path.resolve(baseDir, input.audio) : undefined,
         startSec: input.startSec ?? 0,
         endSec: input.endSec ?? Infinity,
-        concurrency: input.concurrency ?? 2
+        concurrency: input.concurrency ?? 2,
+        batchSize: input.batchSize ?? 30
       });
       return text(`Rendered ${result.frames} frames to ${result.output}`);
     } catch (e) {

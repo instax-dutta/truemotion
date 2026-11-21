@@ -41,9 +41,20 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     const reviewText = review.content.find((b) => b.type === 'text').text;
     assert.ok(review.content.some((b) => b.type === 'image'), 'expected a contact sheet');
 
-    const still = await call('render_video', { out: path.join(dir, 'out.mp4'), fps: 5, resolution: '540p', concurrency: 2 });
-    assert.ok(still.content.find((b) => b.type === 'text').text.includes('Rendered'));
+    const still = await call('render_video', {
+      out: path.join(dir, 'out.mp4'), fps: 5, resolution: '540p',
+      concurrency: 2, batchSize: 4
+    });
+    const renderText = still.content.find((b) => b.type === 'text').text;
+    assert.ok(renderText.includes('Rendered 20 frames'), renderText);
     assert.ok(fs.existsSync(path.join(dir, 'out.mp4')));
+
+    const { spawnSync } = await import('node:child_process');
+    const probe = JSON.parse(spawnSync('ffprobe', [
+      '-v', 'error', '-show_entries', 'format=duration',
+      '-show_entries', 'stream=nb_frames', '-of', 'json', path.join(dir, 'out.mp4')
+    ], { encoding: 'utf8' }).stdout);
+    assert.equal(Number(probe.format.duration), 4);
 
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);
