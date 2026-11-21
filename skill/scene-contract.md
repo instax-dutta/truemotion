@@ -58,6 +58,7 @@ A static validator rejects a document that lacks `.frame`,
 | `{{FX}}` | A local inline-CSS effects helper on `window.OMFX`. See `blocks/fx.md`. |
 | `{{SHADERS}}` | A local CSS utility layer on `window.OMShaders`. See `blocks/shaders.md`. |
 | `{{BRAND:key}}` | A value from the state file's `brand` object, also exposed as `--brand-key`. See `blocks/brand.md`. |
+| `{{COMPONENT:id}}` | A built-in or state-defined HTML snippet. See `blocks/components.md`. |
 
 An HTML comment containing `{{GSAP}}` works, but a bare token is clearer.
 

@@ -16,7 +16,7 @@ This project was recovered by reverse engineering **OpenMotion 1.1.0** (`/Applic
 ## What you get
 
 - Eleven MCP tools: `get_scenes`, `read_scene`, `update_scene`, `patch_scene`, `add_scene`, `read_skill`, `list_skills`, `view_sketch`, `review_timeline`, `render_video`, `optimize_assets`. An agent can author, audit, optimise assets and render a film without shell access.
-- Scene format: one self-contained HTML document per scene with a single paused GSAP timeline on `window.__SCENE_TIMELINE__`. Injection tokens `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`, `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{BRAND:*}}` and the `OMTyping` runtime are resolved locally.
+- Scene format: one self-contained HTML document per scene with a single paused GSAP timeline on `window.__SCENE_TIMELINE__`. Injection tokens `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`, `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{BRAND:*}}`, `{{COMPONENT:*}}` and the `OMTyping` runtime are resolved locally.
 - Contract validation (including a static seek-safety lint that rejects `from()`, external scripts or URLs, timers, `requestAnimationFrame`, CSS keyframes and transitions), evolve/digest reads, and rendered frame feedback after each write. Feedback is measured, not decorative: pixel-diff ratios for static slides and dead holds, duration/timeline mismatches, external requests, script errors, clipped actors and text under 18px. Evolved scenes get measured actor exit states, and a visible jump at an evolved cut is rejected with the two frames attached.
 - Rendering: Playwright seeks the timeline frame-by-frame, ffmpeg encodes the frames to MP4. No cloud service involved. Seeks fire GSAP `onUpdate` callbacks, so proxy-driven counters and typed text export correctly on a cold seek.
 
@@ -131,6 +131,7 @@ Plain JSON, so it is easy to inspect or version:
   "aspect": "16:9",
   "resolution": "1080p",
   "brand": { "primary": "#F5A524", "background": "#0B0E14", "text": "#F3EFE9", "logo": "" },
+  "components": {},
   "scenes": [
     { "id": "uuid", "name": "Opening", "durationSec": 6, "html": "<!doctype html>..." }
   ],
@@ -144,7 +145,7 @@ This is intentionally compatible with OpenMotion's scene tool state, so a projec
 
 ## Scope and limits
 
-- Supported injection tokens are listed above. `{{ROUGH}}`, `{{FX}}` and `{{SHADERS}}` are small local deterministic helpers (`OMRough`, `OMFX`, `OMShaders`) with no third-party dependency. `{{BRAND:*}}` values come from the state file's `brand` object. The remaining original-only tokens (`{{THREE}}`, `{{COMPONENT:*}}`) are rejected with a clear error rather than silently mis-rendered.
+- Supported injection tokens are listed above. `{{ROUGH}}`, `{{FX}}` and `{{SHADERS}}` are small local deterministic helpers (`OMRough`, `OMFX`, `OMShaders`) with no third-party dependency. `{{BRAND:*}}` values come from the state file's `brand` object, and `{{COMPONENT:*}}` expands built-in or state-defined snippets. The remaining original-only token (`{{THREE}}`) is rejected with a clear error rather than silently mis-rendered.
 - There is no GUI, brand-kit scraper or in-app sound editor. The CLI can mux a single audio bed with `--audio`, but there is no timeline-level mixing.
 - Frame-by-frame seeking is deterministic but slow for long videos; use a lower `--fps` for drafts.
 

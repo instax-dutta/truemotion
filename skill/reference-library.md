@@ -23,6 +23,7 @@ hard cuts belong.
 - [Local effects](blocks/fx.md) covers the `{{FX}}` token.
 - [Shader-style utilities](blocks/shaders.md) covers the `{{SHADERS}}` token.
 - [Brand tokens](blocks/brand.md) covers the `{{BRAND:*}}` tokens.
+- [Reusable components](blocks/components.md) covers `{{COMPONENT:*}}`.
 
 ## Worked examples
 

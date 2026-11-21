@@ -42,6 +42,7 @@ locally. This audit closes the RE workstream; remaining gaps are deliberate.
 | 24 | `{{FX}}` / OMFX effects bundle | Replaced with equivalent | `src/fx.js`: local inline-CSS effects; `test/fx.test.js`; `fx-*.png` golden fixtures |
 | 25 | `{{SHADERS}}` / OMShaders CSS utilities | Replaced with equivalent | `src/shaders.js`: local CSS utility layer; `test/shaders.test.js`; `shaders-*.png` golden fixtures |
 | 26 | `{{BRAND:*}}` tokens from scraped brand kits | Replaced with equivalent | `src/brand.js`: state-driven colour variables and inlined logo; `test/brand.test.js`; `brand-*.png` golden fixtures |
+| 27 | `{{COMPONENT:id}}` snippets from brand kits | Replaced with equivalent | `src/components.js`: built-in plus state-defined snippets; `test/components.test.js`; `component-*.png` golden fixtures |
 
 ## Verification commands
 
@@ -54,10 +55,9 @@ npm pack --dry-run            # published file list
 
 ## Open items
 
-- Advanced original tokens (`{{THREE}}`, `{{COMPONENT:*}}`) remain unsupported
-  because their bundles are proprietary or tied to UI we do not ship. Scenes
-  using them are rejected with a clear error rather than silently mis-rendered.
-  `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}` and `{{BRAND:*}}` are now supported by
-  small local equivalents.
+- The `{{THREE}}` token remains unsupported because its bundled 3D runtime is
+  proprietary. Scenes using it are rejected with a clear error rather than
+  silently mis-rendered. `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{BRAND:*}}` and
+  `{{COMPONENT:*}}` are now supported by small local equivalents.
 - npm publication is intentionally paused by the user; the package is verified
   packable but not published.

@@ -19,6 +19,23 @@ window.__SCENE_TIMELINE__=tl;
 window.__SCENE_DURATION__=4;
 </script></body></html>`;
 
+export const COMPONENT_TIMES = [0.5, 2, 3.5];
+
+export const COMPONENT_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
+/* {{FONTS_CSS}} */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0B0E14}
+.frame{position:relative;width:{{W}}px;height:{{H}}px;overflow:hidden;background:#0B0E14}
+.wrap{position:absolute;left:120px;top:180px;display:flex;flex-direction:column;gap:40px}
+</style></head><body><div class="frame"><div class="wrap">{{COMPONENT:card}}{{COMPONENT:button}}</div></div>
+{{GSAP}}
+<script>
+const tl=gsap.timeline({paused:true});
+tl.fromTo('.wrap',{y:40,opacity:0},{y:0,opacity:1,duration:2,ease:'none'},0);
+window.__SCENE_TIMELINE__=tl;
+window.__SCENE_DURATION__=4;
+</script></body></html>`;
+
 export const BRAND_TIMES = [0.5, 2, 3.5];
 export const BRAND = { primary: '#123456', background: '#0B0E14', text: '#F3EFE9' };
 

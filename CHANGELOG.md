@@ -32,6 +32,8 @@
   coverage.
 - Added state-driven `{{BRAND:*}}` tokens with CSS variables and inlined logo,
   with unit and golden-frame coverage.
+- Added built-in and state-defined `{{COMPONENT:*}}` snippets with unit and
+  golden-frame coverage.
 
 ## 0.2.0
 
