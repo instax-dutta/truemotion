@@ -54,6 +54,7 @@ A static validator rejects a document that lacks `.frame`,
 | `{{FONTS_CSS}}` | `@font-face` rules for Display, Body and Mono as data URLs. |
 | `{{ICON:slug}}` | Brand logo as an inline SVG data URL. `/mono` and `/mono/rrggbb` variants exist. |
 | `{{ASSET:relativePath}}` | A file from the project assets directory as a data URL. |
+| `{{ROUGH}}` | A local hand-drawn SVG helper on `window.OMRough`. See `blocks/rough.md`. |
 
 An HTML comment containing `{{GSAP}}` works, but a bare token is clearer.
 

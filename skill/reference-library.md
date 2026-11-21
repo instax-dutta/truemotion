@@ -19,6 +19,7 @@ hard cuts belong.
 - [Block catalogue](blocks/catalog.md) lists small HTML and GSAP shapes.
 - [Typing input](blocks/typing-input.md) covers prompt bars and character
   reveal.
+- [Hand-drawn shapes](blocks/rough.md) covers the `{{ROUGH}}` token.
 
 ## Worked examples
 

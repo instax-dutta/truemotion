@@ -18,3 +18,21 @@ tl.fromTo('.c',{scaleX:0,transformOrigin:'left center'},{scaleX:1,duration:2,eas
 window.__SCENE_TIMELINE__=tl;
 window.__SCENE_DURATION__=4;
 </script></body></html>`;
+
+export const ROUGH_TIMES = [0.5, 2, 3.5];
+
+export const ROUGH_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#F7F3E8}
+.frame{position:relative;width:{{W}}px;height:{{H}}px;overflow:hidden;background:#F7F3E8}
+</style></head><body><div class="frame om-paper-bg"><div id="sketch"></div></div>
+{{ROUGH}}
+<script>
+document.getElementById('sketch').innerHTML=
+  OMRough.rect(100,100,300,200,{stroke:'#111111'})+
+  OMRough.line(100,360,500,360,{stroke:'#F5A524',strokeWidth:5});
+const tl=gsap.timeline({paused:true});
+tl.fromTo('#sketch',{x:0},{x:40,duration:3,ease:'none'},0);
+window.__SCENE_TIMELINE__=tl;
+window.__SCENE_DURATION__=4;
+</script></body></html>`;

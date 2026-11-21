@@ -24,6 +24,8 @@
   data and a 69 KiB generated colour map, preserving `{{ICON:slug}}` tokens.
 - Added a formal reverse-engineering audit with status and evidence per finding.
 - Added pinned-Chromium golden-frame regression coverage in CI.
+- Added a standalone deterministic `{{ROUGH}}` hand-drawn helper with unit and
+  golden-frame coverage.
 
 ## 0.2.0
 

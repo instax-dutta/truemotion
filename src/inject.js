@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { ROUGH_SOURCE } from './rough.js';
 
 const require = createRequire(import.meta.url);
 
@@ -142,6 +143,10 @@ export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
       : CSP + out;
   }
 
+  out = out.replace(/<!--\s*\{\{ROUGH\}\}[^>]*-->/g, () => ROUGH_SOURCE);
+  if (out.includes('{{ROUGH}}')) out = out.replaceAll('{{ROUGH}}', () => ROUGH_SOURCE);
+  if (/\bOMRough\./.test(out) && !out.includes('data-om-rough-runtime')) out = injectBeforeFirstScript(out, ROUGH_SOURCE);
+
   const gsapTag = `<script>${getGsapSource()}<\/script>`;
   const withTyping = gsapTag + (/\bOMTyping\./.test(out) ? TYPING_SHIM : '');
   out = out.replace(/<!--\s*\{\{GSAP\}\}[^>]*-->/g, () => withTyping);
@@ -152,9 +157,9 @@ export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
   out = out.replace(/\{\{ICON:([^}]+)\}\}/g, (_m, spec) => iconDataUrl(spec.trim()));
   out = out.replace(/\{\{ASSET:([^}]+)\}\}/g, (_m, rel) => assetDataUrl(rel.trim(), assetsDir));
 
-  const unsupported = [...out.matchAll(/\{\{(THREE|SHADERS|ROUGH|FX|BRAND:[^}]+|COMPONENT:[^}]+)\}\}/g)].map((m) => m[1]);
+  const unsupported = [...out.matchAll(/\{\{(THREE|SHADERS|FX|BRAND:[^}]+|COMPONENT:[^}]+)\}\}/g)].map((m) => m[1]);
   if (unsupported.length) {
-    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}} and {{ASSET:...}} only.`);
+    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}}, {{ASSET:...}} and {{ROUGH}}.`);
   }
   return out;
 }
