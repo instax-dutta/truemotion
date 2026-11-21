@@ -186,7 +186,7 @@ npm run test:component-resume # opt-in: built-in and custom component changes on
 npm run test:concurrent # opt-in: concurrent MCP writes with no lost updates
 npm run test:contention # opt-in: 20 writers x 3 rounds sustained contention
 npm run selftest
-npm pack --dry-run
+npm pack --dry-run   # runs prepack: tests + tarball verification
 npm run benchmark -- --write   # records docs/benchmarks/latest.md
 npm run goldens                # regenerate pinned golden frames after renderer changes
 npm run test:e2e               # authors the all-token scene through MCP and renders it

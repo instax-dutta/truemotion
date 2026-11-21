@@ -22,6 +22,8 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - run: npm ci
       - run: npm test
+      - name: Verify publishable tarball
+        run: node scripts/verify-tarball.mjs
       - name: Validate state schemas (current and legacy)
         run: |
           node bin/truemotion.mjs validate-state --state examples/pro-out/state.json
