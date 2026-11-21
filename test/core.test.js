@@ -75,3 +75,9 @@ test('evolve warnings flag a changed background', () => {
 test('dimensions rejects unknown aspect', () => {
   assert.throws(() => dimensions('4:3'));
 });
+
+test('inject handles asset path traversal safely', () => {
+  const html = `<!doctype html><html><head><style>/* {{FONTS_CSS}} */ .frame{width:{{W}}px;height:{{H}}px;background:#000}</style></head><body><div class="frame" id="frame"><img src="{{ASSET:../package.json}}"></div><!-- {{GSAP}} --><script>const tl=gsap.timeline({paused:true});tl.fromTo('h1',{opacity:0},{opacity:1,duration:1});window.__SCENE_TIMELINE__=tl;window.__SCENE_DURATION__=2;</script></body></html>`;
+  const out = injectSceneHtml(html, { width: 10, height: 10, assetsDir: '/tmp' });
+  assert.ok(!out.includes('data:application/json;base64'));
+});
