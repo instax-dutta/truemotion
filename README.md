@@ -194,6 +194,12 @@ batch and browser pool rather than video length; at the same 400 frames,
 `--concurrency 1` reduced peak RSS to 910 MiB. Run `npm run bench:longform`
 to reproduce it. The npm package itself does not include the rendered demo film.
 
+Audio alignment was measured over a two-minute render with a looping bed:
+23 ms drift and a confirmed tail fade, detailed in
+[docs/benchmarks/av-drift.md](docs/benchmarks/av-drift.md) (`npm run bench:av`).
+Skill references are cached by SHA-256 content hash, so same-size edits are
+still detected.
+
 Long renders can be split across invocations with `--segment-size` and
 `--max-segments`, then finished with `--resume`. Completed segments are
 checkpointed as MPEG-TS files with a byte-verified manifest, so an interrupted

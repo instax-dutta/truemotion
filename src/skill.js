@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -34,13 +35,13 @@ export function readSkill(dir, file) {
 export function readSkillCached(state, dir, file) {
   const key = String(file).replace(/\\/g, '/').replace(/^\/+/, '').trim();
   const target = skillPath(dir, key);
-  const stat = fs.statSync(target);
-  const fingerprint = `${stat.mtimeMs}:${stat.size}:${path.resolve(dir)}`;
+  const bytes = fs.readFileSync(target);
+  const fingerprint = createHash('sha256').update(bytes).digest('hex');
   const cached = state.skillReadCache[key];
   if (cached && typeof cached === 'object' && cached.fingerprint === fingerprint) {
     return cached.content;
   }
-  const content = fs.readFileSync(target, 'utf8');
+  const content = bytes.toString('utf8');
   state.skillReadCache[key] = { content, fingerprint };
   return content;
 }
