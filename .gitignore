@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.mp4
+!examples/pro-out/pro-demo.mp4
+*.m4a
+*.wav
+truemotion-state.json
+assets/
+examples/out/
+examples/pro-out/*
+!examples/pro-out/pro-demo.mp4

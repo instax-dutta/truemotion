@@ -1,0 +1,73 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { PNG } from 'pngjs';
+import { diffPng } from '../src/diff.js';
+import { createState, addScene, patchScene, dimensions } from '../src/state.js';
+import { validateSceneHtml, evolveWarnings } from '../src/validate.js';
+import { skillPath, listSkillFiles } from '../src/skill.js';
+import { injectSceneHtml } from '../src/inject.js';
+
+const MINIMAL = `<!doctype html><html><head><style>/* {{FONTS_CSS}} */ .frame{width:{{W}}px;height:{{H}}px;background:#000}</style></head>
+<body><div class="frame" id="frame"><h1 data-om-id="headline">Hi</h1></div>
+<!-- {{GSAP}} -->
+<script>const tl=gsap.timeline({paused:true});tl.fromTo('h1',{opacity:0},{opacity:1,duration:1});window.__SCENE_TIMELINE__=tl;window.__SCENE_DURATION__=2;</script></body></html>`;
+
+test('dimensions cover the three aspects', () => {
+  assert.deepEqual(dimensions('16:9'), [1920, 1080]);
+  assert.deepEqual(dimensions('9:16'), [1080, 1920]);
+  assert.deepEqual(dimensions('1:1'), [1080, 1080]);
+});
+
+test('valid scene contract passes and broken ones fail', () => {
+  assert.equal(validateSceneHtml(MINIMAL).ok, true);
+  assert.equal(validateSceneHtml('').ok, false);
+  assert.equal(validateSceneHtml('<div>no timeline</div>').ok, false);
+  const badFont = MINIMAL.replace('.frame{', '.frame{font-family:Inter;');
+  assert.equal(validateSceneHtml(badFont).ok, false);
+});
+
+test('state add and patch keep scenes consistent', () => {
+  const s = createState();
+  const scene = addScene(s, { name: 'A', durationSec: 2, html: MINIMAL });
+  assert.equal(s.scenes.length, 1);
+  assert.equal(patchScene(s, 'missing', [{ find: 'x', replace: 'y' }]).error.includes('not found'), true);
+  assert.equal(patchScene(s, scene.id, [{ find: 'ZZUNIQUEZZ', replace: 'y' }]).error.includes('not found'), true);
+  const ok = patchScene(s, scene.id, [{ find: '>Hi<', replace: '>Hello<' }]);
+  assert.ok(ok.html.includes('>Hello<'));
+  assert.ok(scene.html.includes('>Hi<'));
+});
+
+test('skill paths cannot escape the skill directory', () => {
+  const dir = new URL('../skill/', import.meta.url).pathname;
+  assert.ok(listSkillFiles(dir).includes('scene-contract.md'));
+  assert.throws(() => skillPath(dir, '../package.json'));
+  assert.throws(() => skillPath(dir, 'scene-contract.txt'));
+});
+
+test('injection resolves tokens and rejects unsupported ones', () => {
+  const out = injectSceneHtml(MINIMAL, { width: 1920, height: 1080 });
+  assert.ok(out.includes('1920px'));
+  assert.ok(out.includes('1080px'));
+  assert.ok(out.includes('gsap'));
+  assert.ok(!out.includes('{{GSAP}}'));
+  assert.ok(!out.includes('{{FONTS_CSS}}'));
+  assert.throws(() => injectSceneHtml('{{THREE}}', { width: 1, height: 1 }), /Unsupported/);
+});
+
+test('pixel diff detects motion and ignores identical frames', () => {
+  const make = (value) => {
+    const png = new PNG({ width: 32, height: 32 });
+    for (let i = 0; i < png.data.length; i += 4) {
+      png.data[i] = value; png.data[i + 1] = value; png.data[i + 2] = value; png.data[i + 3] = 255;
+    }
+    return PNG.sync.write(png);
+  };
+  assert.equal(diffPng(make(10), make(10)).changedRatio, 0);
+  assert.ok(diffPng(make(10), make(200)).changedRatio > 0.9);
+});
+
+test('evolve warnings flag a changed background', () => {
+  const prev = { html: MINIMAL };
+  const next = { html: MINIMAL.replace('background:#000', 'background:#fff') };
+  assert.ok(evolveWarnings(prev, next).some((w) => w.includes('background')));
+});

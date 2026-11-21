@@ -1,0 +1,56 @@
+{
+  "name": "truemotion",
+  "version": "0.2.0",
+  "description": "Open, harness-agnostic motion-graphics scene tool, MCP server and renderer",
+  "type": "module",
+  "license": "MIT",
+  "author": "TrueMotion contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instax-dutta/truemotion.git"
+  },
+  "homepage": "https://github.com/instax-dutta/truemotion#readme",
+  "bugs": "https://github.com/instax-dutta/truemotion/issues",
+  "keywords": [
+    "mcp",
+    "motion-graphics",
+    "video",
+    "gsap",
+    "playwright",
+    "ffmpeg",
+    "agents"
+  ],
+  "bin": {
+    "truemotion": "./bin/truemotion.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skill/",
+    "test/",
+    "examples/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "NOTICE.md",
+    "CONTRIBUTING.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "demo": "node examples/intro-demo.mjs",
+    "demo:pro": "node examples/pro-demo.mjs"
+  },
+  "dependencies": {
+    "@fontsource/archivo": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "gsap": "^3.15.0",
+    "playwright": "^1.61.0",
+    "pngjs": "^7.0.0",
+    "simple-icons": "^16.24.1",
+    "zod": "^4.4.3"
+  }
+}
