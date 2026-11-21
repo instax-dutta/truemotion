@@ -54,7 +54,7 @@
     "bench:longform": "node scripts/longform-benchmark.mjs",
     "bench:av": "node scripts/av-benchmark.mjs",
     "guard:longform": "node scripts/guard-longform.mjs",
-    "guard:smoke": "LF_REPORT=docs/benchmarks/ci-smoke.md GUARD_MIN_FRAMES=160 GUARD_MIN_FPS=2 GUARD_MAX_RSS_MIB=1800 GUARD_MIN_OUTPUT_KIB=50 GUARD_MAX_OUTPUT_KIB=10000 node scripts/guard-longform.mjs",
+    "guard:smoke": "LF_REPORT=docs/benchmarks/ci-smoke.md GUARD_MIN_FRAMES=160 GUARD_MIN_FPS=2 GUARD_MAX_RSS_MIB=2400 GUARD_MIN_OUTPUT_KIB=50 GUARD_MAX_OUTPUT_KIB=10000 node scripts/guard-longform.mjs",
     "goldens": "node scripts/generate-goldens.mjs",
     "test:e2e": "TRUEMOTION_E2E=1 node --test test/combined-e2e.test.js",
     "test:crash": "TRUEMOTION_CRASH=1 node --test test/crash-resume.test.js",

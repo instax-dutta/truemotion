@@ -63,8 +63,11 @@ GPU pages, so the figure is an upper bound. Frames are streamed to ffmpeg via
 Push CI runs a fast sampled variant on every change: a 4-scene, 160-frame,
 540p render (`LF_SCENES=4 LF_RESOLUTION=540p npm run bench:longform`) followed
 by `npm run guard:smoke`, which requires 160 frames, at least 2 fps, peak RSS
-under 1800 MiB and output between 50 and 10000 KiB. Local measurements are
-~9.5 fps, 888 MiB and 278 KiB. This catches gross regressions on every push;
+under 2400 MiB and output between 50 and 10000 KiB. Measurements are ~9.5 fps,
+888 MiB and 278 KiB locally, and 6.8 fps, 1818 MiB and 322 KiB on the Linux CI
+runner; the RSS cap was raised from 1800 to 2400 MiB after the first CI run
+showed the lower value was unrealistically tight for that runner. This catches
+gross regressions on every push;
 the nightly job runs the full 1200-frame 1080p version with tighter relative
 thresholds.
 

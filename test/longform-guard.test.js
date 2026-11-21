@@ -17,6 +17,7 @@ test('long-form guard script is wired into the nightly workflow', () => {
 test('push CI has a fast sampled long-form guard', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   assert.match(pkg.scripts['guard:smoke'], /GUARD_MIN_FRAMES=160/);
+  assert.match(pkg.scripts['guard:smoke'], /GUARD_MAX_RSS_MIB=2400/);
   assert.match(pkg.scripts['guard:smoke'], /GUARD_MIN_FPS=2/);
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/ci.yml'), 'utf8');
   assert.ok(workflow.includes('npm run guard:smoke'));
