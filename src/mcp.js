@@ -18,7 +18,7 @@ const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const error = (value) => ({ isError: true, content: [{ type: 'text', text: value }] });
 
 export async function startServer({ stateFile, skillDir, assetsDir, preview = true }) {
-  const server = new McpServer({ name: 'truemotion', version: '0.2.0' });
+  const server = new McpServer({ name: 'truemotion', version: '0.3.0' });
   const withState = async (fn) => {
     const state = loadState(stateFile);
     const result = await fn(state);

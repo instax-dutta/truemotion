@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+- Replaced all recovered skill documentation with original MIT-licensed references.
+- Added a static seek-safety lint that rejects `from()`, external resources,
+  timers, `requestAnimationFrame`, CSS keyframes and transitions.
+- Added `still`, `optimize-assets`, `selftest`, `list_skills` and `render_video`.
+- Added resolution scaling, system Chrome support, time ranges and parallel
+  frame rendering with `--concurrency`.
+- Injected a local-only CSP into every scene.
+- Added a standalone ffmpeg asset optimiser and safe export filenames.
+- Added path-based element IDs for unlabelled actors in evolved reads.
+- `review_timeline` now returns one contact sheet instead of one image per scene.
+- Hardened state loading with per-scene validation and atomic saves with unique
+  temporary names.
+- Trimmed generated media from the npm tarball.
+
 ## 0.2.0
 
 - Added measured feedback: pixel-diff ratios for static slides and dead holds,

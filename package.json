@@ -1,6 +1,6 @@
 {
   "name": "truemotion",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Open, harness-agnostic motion-graphics scene tool, MCP server and renderer",
   "type": "module",
   "license": "MIT",
