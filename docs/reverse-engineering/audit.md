@@ -39,6 +39,7 @@ locally. This audit closes the RE workstream; remaining gaps are deliberate.
 | 21 | Chat-document limits (`MAX_CHAT_DOCUMENT_BYTES`, `isAllowedChatDocument`) | Rejected | Chat UI concern, not scene rendering |
 | 22 | `drainPendingEvents` Electron event stream | Rejected | No Electron process; state file changes are the event record |
 | 23 | `{{ROUGH}}` / `OMRough` hand-drawn helper backed by rough.js | Replaced with equivalent | `src/rough.js`: deterministic local SVG helper; `test/rough.test.js`; `rough-*.png` golden fixtures |
+| 24 | `{{FX}}` / OMFX effects bundle | Replaced with equivalent | `src/fx.js`: local inline-CSS effects; `test/fx.test.js`; `fx-*.png` golden fixtures |
 
 ## Verification commands
 
@@ -51,10 +52,10 @@ npm pack --dry-run            # published file list
 
 ## Open items
 
-- Advanced original tokens (`{{THREE}}`, `{{SHADERS}}`, `{{FX}}`, `{{BRAND:*}}`,
+- Advanced original tokens (`{{THREE}}`, `{{SHADERS}}`, `{{BRAND:*}}`,
   `{{COMPONENT:*}}`) remain unsupported because their bundles are proprietary
   or tied to brand-kit UI. Scenes using them are rejected with a clear error
-  rather than silently mis-rendered. `{{ROUGH}}` is now supported by a small
-  local equivalent.
+  rather than silently mis-rendered. `{{ROUGH}}` and `{{FX}}` are now supported
+  by small local equivalents.
 - npm publication is intentionally paused by the user; the package is verified
   packable but not published.

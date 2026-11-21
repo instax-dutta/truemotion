@@ -26,6 +26,8 @@
 - Added pinned-Chromium golden-frame regression coverage in CI.
 - Added a standalone deterministic `{{ROUGH}}` hand-drawn helper with unit and
   golden-frame coverage.
+- Added a standalone `{{FX}}` inline-CSS effects helper with unit and
+  golden-frame coverage.
 
 ## 0.2.0
 

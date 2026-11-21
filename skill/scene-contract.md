@@ -55,6 +55,7 @@ A static validator rejects a document that lacks `.frame`,
 | `{{ICON:slug}}` | Brand logo as an inline SVG data URL. `/mono` and `/mono/rrggbb` variants exist. |
 | `{{ASSET:relativePath}}` | A file from the project assets directory as a data URL. |
 | `{{ROUGH}}` | A local hand-drawn SVG helper on `window.OMRough`. See `blocks/rough.md`. |
+| `{{FX}}` | A local inline-CSS effects helper on `window.OMFX`. See `blocks/fx.md`. |
 
 An HTML comment containing `{{GSAP}}` works, but a bare token is clearer.
 

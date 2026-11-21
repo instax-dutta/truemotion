@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { renderFrames } from '../src/render.js';
-import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES } from '../test/fixtures/golden-scene.mjs';
+import { GOLDEN_HTML, GOLDEN_TIMES, ROUGH_HTML, ROUGH_TIMES, FX_HTML, FX_TIMES } from '../test/fixtures/golden-scene.mjs';
 
 const require = createRequire(import.meta.url);
 process.env.TRUEMOTION_CHROME = require('playwright-core').chromium.executablePath();
@@ -17,7 +17,8 @@ fs.mkdirSync(outDir, { recursive: true });
 
 const sets = [
   { prefix: 'frame', html: GOLDEN_HTML, times: GOLDEN_TIMES },
-  { prefix: 'rough', html: ROUGH_HTML, times: ROUGH_TIMES }
+  { prefix: 'rough', html: ROUGH_HTML, times: ROUGH_TIMES },
+  { prefix: 'fx', html: FX_HTML, times: FX_TIMES }
 ];
 
 for (const set of sets) {

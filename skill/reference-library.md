@@ -20,6 +20,7 @@ hard cuts belong.
 - [Typing input](blocks/typing-input.md) covers prompt bars and character
   reveal.
 - [Hand-drawn shapes](blocks/rough.md) covers the `{{ROUGH}}` token.
+- [Local effects](blocks/fx.md) covers the `{{FX}}` token.
 
 ## Worked examples
 
