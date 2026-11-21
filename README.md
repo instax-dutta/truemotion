@@ -89,6 +89,12 @@ node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --a
 
 `--crf` defaults to 18 (higher quality than ffmpeg's default). `--audio` loops the file, fades it in and out, and cuts it to the video length.
 
+For frame-accurate QA without ffmpeg, export a single PNG:
+
+```bash
+node bin/truemotion.mjs still --state truemotion-state.json --out frame.png --scene 2 --time 1.5
+```
+
 Call `review_timeline` through MCP before finishing a video. It audits every scene and returns a short note plus a middle frame per scene, so the connected model can fix its own work rather than following a fixed template.
 
 ## Example

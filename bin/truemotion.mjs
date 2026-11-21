@@ -30,6 +30,7 @@ Usage:
   truemotion serve --state <state.json> [--skill <dir>] [--assets <dir>] [--no-preview]
   truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--resolution 720p] [--audio <file>] [--assets <dir>] [--chrome <path>]
   truemotion serve --state <state.json> [--chrome <path>]        # reuses system Chrome if set
+  truemotion still --state <state.json> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]
   truemotion install-skill <target-dir>
   truemotion doctor
 
@@ -77,6 +78,26 @@ async function main() {
       assetsDir: opts.assets ? path.resolve(opts.assets) : path.join(path.dirname(path.resolve(stateFile)), 'assets')
     });
     console.log(`Rendered ${result.frames} frames to ${result.output}`);
+    return;
+  }
+
+  if (command === 'still') {
+    const { loadState, findScene } = await import('../src/state.js');
+    const { renderFrames } = await import('../src/render.js');
+    if (!opts.out) throw new Error('still requires --out <frame.png>');
+    const state = loadState(stateFile);
+    const scene = findScene(state, opts.scene);
+    if (!scene) throw new Error(`Scene not found: ${opts.scene ?? '(none)'}`);
+    const [frame] = await renderFrames(scene.html, {
+      aspect: state.aspect,
+      resolution: opts.resolution || state.resolution,
+      timesSec: [Number(opts.time || 0)],
+      chrome: opts.chrome ? path.resolve(opts.chrome) : undefined,
+      assetsDir: opts.assets ? path.resolve(opts.assets) : path.join(path.dirname(path.resolve(stateFile)), 'assets')
+    });
+    fs.mkdirSync(path.dirname(path.resolve(opts.out)), { recursive: true });
+    fs.writeFileSync(opts.out, Buffer.from(frame.base64Png, 'base64'));
+    console.log(`Wrote ${path.resolve(opts.out)} at ${opts.time || 0}s from scene ${scene.name}`);
     return;
   }
 

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PNG } from 'pngjs';
 import { diffPng } from '../src/diff.js';
-import { createState, addScene, patchScene, dimensions } from '../src/state.js';
+import { createState, addScene, patchScene, dimensions, findScene } from '../src/state.js';
 import { validateSceneHtml, evolveWarnings } from '../src/validate.js';
 import { skillPath, listSkillFiles } from '../src/skill.js';
 import { injectSceneHtml } from '../src/inject.js';
@@ -43,6 +43,16 @@ test('state add and patch keep scenes consistent', () => {
   const ok = patchScene(s, scene.id, [{ find: '>Hi<', replace: '>Hello<' }]);
   assert.ok(ok.html.includes('>Hello<'));
   assert.ok(scene.html.includes('>Hi<'));
+});
+
+test('findScene accepts id, 1-based index, or defaults to first', () => {
+  const s = createState();
+  const a = addScene(s, { name: 'A', durationSec: 2, html: MINIMAL });
+  addScene(s, { name: 'B', durationSec: 2, html: MINIMAL });
+  assert.equal(findScene(s).id, a.id);
+  assert.equal(findScene(s, '2').name, 'B');
+  assert.equal(findScene(s, a.id).name, 'A');
+  assert.equal(findScene(s, '99'), null);
 });
 
 test('skill paths cannot escape the skill directory', () => {

@@ -53,6 +53,15 @@ export function saveState(file, state) {
   fs.renameSync(tmp, file);
 }
 
+export function findScene(state, ref) {
+  if (ref === undefined) return state.scenes[0] ?? null;
+  const byId = state.scenes.find((scene) => scene.id === ref);
+  if (byId) return byId;
+  const index = Number(ref);
+  if (Number.isInteger(index) && index >= 1 && index <= state.scenes.length) return state.scenes[index - 1];
+  return null;
+}
+
 export function sceneMetadata(scenes) {
   return scenes.map((scene, i) => ({
     index: i + 1,
