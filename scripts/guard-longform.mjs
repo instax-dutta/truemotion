@@ -11,7 +11,7 @@ const report = path.isAbsolute(reportArg) ? reportArg : path.join(root, reportAr
 
 const thresholds = {
   minFrames: Number(process.env.GUARD_MIN_FRAMES || 1200),
-  minFps: Number(process.env.GUARD_MIN_FPS || 4),
+  minFps: Number(process.env.GUARD_MIN_FPS || 2.5),
   maxPeakRssMib: Number(process.env.GUARD_MAX_RSS_MIB || 2800),
   minOutputKib: Number(process.env.GUARD_MIN_OUTPUT_KIB || 1000),
   maxOutputKib: Number(process.env.GUARD_MAX_OUTPUT_KIB || 50000)

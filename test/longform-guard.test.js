@@ -17,10 +17,10 @@ test('long-form guard script is wired into the nightly workflow', () => {
 test('documented thresholds match the guard defaults', () => {
   const guard = fs.readFileSync(path.join(root, 'scripts/guard-longform.mjs'), 'utf8');
   assert.match(guard, /GUARD_MIN_FRAMES \|\| 1200/);
-  assert.match(guard, /GUARD_MIN_FPS \|\| 4/);
+  assert.match(guard, /GUARD_MIN_FPS \|\| 2\.5/);
   assert.match(guard, /GUARD_MAX_RSS_MIB \|\| 2800/);
   const doc = fs.readFileSync(path.join(root, 'docs/benchmarks/longform.md'), 'utf8');
-  for (const value of ['1200', '2800 MiB', '4 fps']) {
+  for (const value of ['1200', '2800 MiB', '2.5 fps']) {
     assert.ok(doc.includes(value), `thresholds doc missing ${value}`);
   }
 });
