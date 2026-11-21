@@ -189,9 +189,12 @@ npm run goldens                # regenerate pinned golden frames after renderer 
 npm run test:e2e               # authors the all-token scene through MCP and renders it
 ```
 
-CI runs a pinned-Chromium golden-frame regression job. The fixtures are
-font-free geometric scenes rendered at 540p, so they stay stable across hosts;
-set `TRUEMOTION_GOLDEN=1` to run that test locally.
+CI runs a pinned-Chromium golden-frame regression job plus the MCP end-to-end,
+crash-resume, audio-resume, CSP, schema, scene-order and render-setting suites.
+The fixtures are font-free geometric scenes rendered at 540p, so they stay
+stable across hosts; set `TRUEMOTION_GOLDEN=1` to run that test locally. The
+multi-minute A/V resume test (`npm run test:long-av`) stays opt-in outside CI
+because it takes about 3.5 minutes.
 
 Measured footprint and frame rates on one machine are recorded in
 [docs/benchmarks/latest.md](docs/benchmarks/latest.md). The organisation-scale
