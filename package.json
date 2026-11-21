@@ -41,7 +41,8 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "demo": "node examples/intro-demo.mjs",
-    "demo:pro": "node examples/pro-demo.mjs"
+    "demo:pro": "node examples/pro-demo.mjs",
+    "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.2.8",
