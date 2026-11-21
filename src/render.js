@@ -65,9 +65,11 @@ async function seek(page, time, duration) {
   await page.evaluate(({ t, d }) => {
     const tl = window.__SCENE_TIMELINE__;
     tl.pause();
-    // seek(t, false) fires onUpdate callbacks so proxy-driven counters and
-    // typed text stay correct on a cold seek during export.
+    // seek(t, false) fires onUpdate callbacks so proxy-driven counters stay
+    // correct on a cold seek; the typing runtime also exposes an explicit
+    // flush registry for renderers that suppress events.
     tl.seek(Math.max(0, Number.isFinite(d) ? Math.min(t, d) : t), false);
+    if (window.OMTyping && typeof window.OMTyping._flush === 'function') window.OMTyping._flush();
   }, { t: time, d: Number(duration) });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }

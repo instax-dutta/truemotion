@@ -11,6 +11,8 @@
 - Injected a local-only CSP into every scene.
 - Added a standalone ffmpeg asset optimiser and safe export filenames.
 - Added path-based element IDs for unlabelled actors in evolved reads.
+- Adopted the typing runtime's explicit flush registry and blinking cursor for
+  seek-accurate character reveals.
 - `review_timeline` now returns one contact sheet instead of one image per scene.
 - Hardened state loading with per-scene validation and atomic saves with unique
   temporary names.

@@ -35,7 +35,11 @@ window.__SCENE_TIMELINE__ = tl;
 window.__SCENE_DURATION__ = 4;
 ```
 
-`OMTyping` is injected by the renderer; there is no token to place.
+`OMTyping` is injected by the renderer; there is no token to place. It keeps an
+explicit `_writes` flush registry that the renderer calls after every seek, so
+the text is correct even on a cold seek. The cursor is set visible at the start
+and blinks on its own repeating tween; do not add a second blink with CSS or a
+timer.
 
 ## Rules
 
