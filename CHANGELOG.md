@@ -57,6 +57,7 @@
 - Partial render progress now reports the total frames of the selected time range instead of the whole timeline.
 - Corrupt or structurally invalid checkpoint manifests are detected and trigger a clean full render, with unit and e2e coverage.
 - Added an opt-in two-minute 1080p end-to-end test that renders a looping-audio film across four segments, interrupts after the first, resumes, and verifies 1200 frames plus A/V alignment and tail fade.
+- Added unit and opt-in CLI coverage that reordering scenes changes the checkpoint digest and is rejected on resume without mutating the manifest.
 
 ## 0.2.0
 

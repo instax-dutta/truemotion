@@ -81,6 +81,15 @@ test('manifest compatibility rejects changed render settings', () => {
   assert.ok(!manifestCompatible({ ...manifest, finalized: true }, meta));
 });
 
+test('scene digest is order sensitive', () => {
+  const a = { id: 'a', name: 'A', durationSec: 4, html: '<html>A</html>' };
+  const b = { id: 'b', name: 'B', durationSec: 4, html: '<html>B</html>' };
+  const forward = { ...sampleState, scenes: [a, b] };
+  const reversed = { ...sampleState, scenes: [b, a] };
+  assert.notEqual(sceneDigest(forward), sceneDigest(reversed));
+  assert.equal(sceneDigest(forward), sceneDigest(structuredClone(forward)));
+});
+
 test('audio path and content changes reject a resume', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-audio-digest-'));
   const bedA = path.join(dir, 'a.m4a');

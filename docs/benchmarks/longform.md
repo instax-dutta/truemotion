@@ -87,4 +87,8 @@ segment, and verifies the byte-verified manifest discards the orphan file and
 re-encodes that segment on resume. A truncated or structurally invalid
 `resume.json` is detected by `readManifest` and treated as absent, so `--resume`
 performs a clean full render rather than muxing a broken checkpoint; this is
-covered by both unit and crash-suite tests.
+covered by both unit and crash-suite tests. The digest is order sensitive:
+reordering scenes without editing any of them changes it, so a resumed render
+rejects the reordered state. `npm run test:scene-order` (opt-in) exercises this
+through the CLI, asserting that the rejected resume leaves both the manifest
+and the absence of a final film unchanged.
