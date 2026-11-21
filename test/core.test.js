@@ -7,6 +7,7 @@ import { validateSceneHtml, evolveWarnings } from '../src/validate.js';
 import { skillPath, listSkillFiles } from '../src/skill.js';
 import { injectSceneHtml } from '../src/inject.js';
 import { chunkTimes, selectFrames } from '../src/render.js';
+import { makeContactSheet } from '../src/sheet.js';
 
 const MINIMAL = `<!doctype html><html><head><style>/* {{FONTS_CSS}} */ .frame{width:{{W}}px;height:{{H}}px;background:#000}</style></head>
 <body><div class="frame" id="frame"><h1 data-om-id="headline">Hi</h1></div>
@@ -93,6 +94,17 @@ test('injection resolves tokens and rejects unsupported ones', () => {
   assert.ok(!out.includes('{{GSAP}}'));
   assert.ok(!out.includes('{{FONTS_CSS}}'));
   assert.throws(() => injectSceneHtml('{{THREE}}', { width: 1, height: 1 }), /Unsupported/);
+});
+
+test('contact sheet tiles frames into one PNG', () => {
+  const png = new PNG({ width: 40, height: 20 });
+  png.data.fill(80);
+  const raw = PNG.sync.write(png);
+  const sheet = makeContactSheet([raw, raw, raw], { columns: 3, tileWidth: 20 });
+  const decoded = PNG.sync.read(Buffer.from(sheet, 'base64'));
+  assert.equal(decoded.width, 60);
+  assert.equal(decoded.height, 10);
+  assert.equal(makeContactSheet([]), null);
 });
 
 test('pixel diff detects motion and ignores identical frames', () => {

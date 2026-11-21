@@ -95,7 +95,7 @@ For frame-accurate QA without ffmpeg, export a single PNG:
 node bin/truemotion.mjs still --state truemotion-state.json --out frame.png --scene 2 --time 1.5
 ```
 
-Call `review_timeline` through MCP before finishing a video. It audits every scene and returns a short note plus a middle frame per scene, so the connected model can fix its own work rather than following a fixed template.
+Call `review_timeline` through MCP before finishing a video. It audits every scene and returns a short note plus one contact sheet of middle frames, so the connected model can fix its own work with a small image payload. Pass `contactSheet: false` to receive full-size frames instead.
 
 ## Example
 

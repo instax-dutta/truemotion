@@ -9,6 +9,7 @@ import {
 import { validateSceneHtml, evolveGuide, evolveWarnings } from './validate.js';
 import { readSkill } from './skill.js';
 import { sceneNotes, actorExitStates, matchedCut } from './render.js';
+import { makeContactSheet } from './sheet.js';
 import { percent } from './diff.js';
 
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
@@ -208,8 +209,11 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
 
   server.registerTool('review_timeline', {
     description: 'Audit the whole timeline (or one scene) for static slides, dead holds, duration/timeline mismatches, external requests, script errors, clipped actors and tiny text. Use before finishing a video.',
-    inputSchema: z.object({ sceneId: z.string().optional().describe('Limit the review to this scene id; omit to review all scenes.') })
-  }, async ({ sceneId }) => withState(async (state) => {
+    inputSchema: z.object({
+      sceneId: z.string().optional().describe('Limit the review to this scene id; omit to review all scenes.'),
+      contactSheet: z.boolean().optional().describe('Return one contact sheet instead of an image per scene. Default true.')
+    })
+  }, async ({ sceneId, contactSheet = true }) => withState(async (state) => {
     let scenes = state.scenes;
     if (sceneId) {
       scenes = scenes.filter((s) => s.id === sceneId);
@@ -217,10 +221,17 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
     }
     if (!scenes.length) return error('No scenes to review.');
     const blocks = [];
+    const thumbnails = [];
     for (const [i, scene] of scenes.entries()) {
       const { notes, blocks: frames } = await sceneNotes(scene, state, { assetsDir });
       blocks.push({ type: 'text', text: `Scene ${i + 1} "${scene.name}" (${scene.id}): ${notes.join(' ') || 'No issues detected.'}` });
-      if (frames[1]?.type === 'image') blocks.push(frames[1]);
+      if (frames[1]?.type === 'image') thumbnails.push(frames[1].data);
+    }
+    if (contactSheet && thumbnails.length) {
+      const sheet = makeContactSheet(thumbnails);
+      if (sheet) blocks.push({ type: 'image', data: sheet, mimeType: 'image/png' });
+    } else if (!contactSheet) {
+      for (const data of thumbnails) blocks.push({ type: 'image', data, mimeType: 'image/png' });
     }
     return { content: blocks };
   }));
