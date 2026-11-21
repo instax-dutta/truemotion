@@ -175,6 +175,7 @@ All source in `src/`, `bin/` and `test/`, and all reference documents in `skill/
 ```bash
 npm test
 npm run test:e2e
+npm run test:crash
 npm run selftest
 npm pack --dry-run
 npm run benchmark -- --write   # records docs/benchmarks/latest.md

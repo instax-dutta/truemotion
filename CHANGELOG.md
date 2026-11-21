@@ -48,6 +48,7 @@
 - Made skill-read caching hash-based (SHA-256) so edited skill files, including same-size edits, invalidate stale entries.
 - Added A/V alignment coverage (looping bed, duration within 50 ms, measured fade-out); no drift found. A two-minute multi-minute render measured 23 ms drift with a 5.1 dB tail fade, recorded in `docs/benchmarks/av-drift.md`.
 - Added an explicit `schemaVersion` to state files with migration warnings for legacy/older files and rejection of newer schemas.
+- Added a genuine SIGKILL crash-resume test that kills a render mid-segment and verifies checkpoint recovery, and wired crash, A/V drift and schema validation into CI.
 
 ## 0.2.0
 

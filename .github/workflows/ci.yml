@@ -22,6 +22,12 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - run: npm ci
       - run: npm test
+      - name: Validate state schemas (current and legacy)
+        run: |
+          node bin/truemotion.mjs validate-state --state examples/pro-out/state.json
+          cp examples/pro-out/state.json /tmp/tm-legacy-state.json
+          node -e "const fs=require('fs');const p='/tmp/tm-legacy-state.json';const s=JSON.parse(fs.readFileSync(p));delete s.schemaVersion;fs.writeFileSync(p,JSON.stringify(s))"
+          node bin/truemotion.mjs validate-state --state /tmp/tm-legacy-state.json
 
   golden:
     runs-on: ubuntu-latest
@@ -43,3 +49,7 @@ jobs:
         run: npm test
       - name: Run combined-token MCP end-to-end test
         run: npm run test:e2e
+      - name: Run SIGKILL crash-resume test
+        run: npm run test:crash
+      - name: Multi-minute A/V drift check
+        run: AV_SCENES=10 npm run bench:av
