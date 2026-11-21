@@ -6,7 +6,8 @@ import path from 'node:path';
 import {
   manifestPath, segmentPath, emptyManifest, writeManifest, readManifest,
   clearCheckpoint, completedIndices, planSegments, manifestCompatible, writeConcatList,
-  sceneDigest, MANIFEST_VERSION, referencedAssets, assetFileHashes, fileDigest
+  sceneDigest, MANIFEST_VERSION, referencedAssets, assetFileHashes, fileDigest,
+  segmentComplete, assertUniqueSegments
 } from '../src/segments.js';
 
 const sampleState = {
@@ -58,6 +59,23 @@ test('corrupt or structurally invalid manifests are treated as absent', () => {
   good.segments.push({ index: 0, start: 0, count: 40, bytes: 9 });
   writeManifest(dir, good);
   assert.ok(readManifest(dir));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('same-size segment corruption is detected by digest', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-segment-digest-'));
+  const manifest = emptyManifest(meta);
+  const file = segmentPath(dir, 0);
+  fs.writeFileSync(file, '123456789');
+  const entry = { index: 0, start: 0, count: 40, bytes: 9, digest: fileDigest(file) };
+  manifest.segments.push(entry);
+  assert.ok(segmentComplete(dir, entry));
+
+  // Same length, different bytes: size-only checks would pass.
+  fs.writeFileSync(file, '987654321');
+  assert.equal(fs.statSync(file).size, entry.bytes);
+  assert.ok(!segmentComplete(dir, entry), 'same-size corruption must be detected');
+  assert.deepEqual([...completedIndices(manifest, dir)], []);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -156,6 +174,15 @@ test('asset contents are hashed into the digest', () => {
   const escaping = { ...state, scenes: [{ ...state.scenes[0], html: '<img src="{{ASSET:../secret.png}}">' }] };
   assert.deepEqual(assetFileHashes(escaping, dir), {});
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('duplicate segment indices are rejected before concatenation', () => {
+  const segments = [
+    { index: 0, start: 0, count: 20 },
+    { index: 0, start: 0, count: 20 }
+  ];
+  assert.throws(() => assertUniqueSegments(segments), /Duplicate segment indices/);
+  assert.equal(assertUniqueSegments([segments[0], { index: 1, start: 20, count: 20 }]).length, 2);
 });
 
 test('concat list references each completed segment', () => {

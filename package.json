@@ -67,6 +67,7 @@
     "test:component-resume": "TRUEMOTION_COMPONENT_RESUME=1 node --test test/component-resume.test.js",
     "test:concurrent": "TRUEMOTION_CONCURRENT=1 node --test test/concurrent-mcp.test.js",
     "test:contention": "TRUEMOTION_CONTENTION=1 node --test test/contention-stress.test.js",
+    "test:segment-corruption": "TRUEMOTION_SEGMENT_CORRUPTION=1 node --test test/segment-corruption.test.js",
     "check": "node --test test/*.test.js && npm pack --dry-run",
     "prepack": "node --test test/*.test.js && node scripts/verify-tarball.mjs"
   },

@@ -96,7 +96,9 @@ export function segmentComplete(dir, entry) {
   if (!entry) return false;
   const file = segmentPath(dir, entry.index);
   if (!fs.existsSync(file)) return false;
-  return fs.statSync(file).size === entry.bytes;
+  if (fs.statSync(file).size !== entry.bytes) return false;
+  if (entry.digest && fileDigest(file) !== entry.digest) return false;
+  return true;
 }
 
 export function completedIndices(manifest, dir) {
@@ -127,6 +129,14 @@ export function manifestCompatible(manifest, meta) {
     manifest.segmentSize === meta.segmentSize &&
     (manifest.audio ?? null) === (meta.audio ?? null) &&
     (manifest.audioDigest ?? null) === (meta.audioDigest ?? null);
+}
+
+export function assertUniqueSegments(segments) {
+  const indices = segments.map((segment) => segment.index);
+  if (new Set(indices).size !== indices.length) {
+    throw new Error('Duplicate segment indices in manifest; refusing to concatenate');
+  }
+  return segments;
 }
 
 export function writeConcatList(dir, segments) {

@@ -115,7 +115,13 @@ asset and path-traversal digests, byte-size verification and segment planning;
 file and an asset file, verifying each rejection. `test/crash-resume.test.js`
 sends SIGKILL to a live render, including during a partially written MPEG-TS
 segment, and verifies the byte-verified manifest discards the orphan file and
-re-encodes that segment on resume. A truncated or structurally invalid
+re-encodes that segment on resume. Each manifest entry now also stores a
+SHA-256 digest of the segment, so corruption that preserves the byte count is
+detected and the segment is re-encoded. Re-encoding replaces the old manifest
+entry rather than appending a duplicate, and finalization refuses duplicate
+indices. `npm run test:segment-corruption` flips a byte in a completed segment
+and verifies the resumed film still contains exactly the expected frames.
+A truncated or structurally invalid
 `resume.json` is detected by `readManifest` and treated as absent, so `--resume`
 performs a clean full render rather than muxing a broken checkpoint; this is
 covered by both unit and crash-suite tests. The digest is order sensitive:

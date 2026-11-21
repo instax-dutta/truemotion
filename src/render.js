@@ -5,7 +5,7 @@ import { createEncoder, buildFinalizeArgs } from './encode.js';
 import {
   checkpointDirFor, manifestPath, segmentPath, emptyManifest, readManifest,
   writeManifest, clearCheckpoint, completedIndices, planSegments,
-  manifestCompatible, writeConcatList, sceneDigest, fileDigest
+  manifestCompatible, writeConcatList, sceneDigest, fileDigest, assertUniqueSegments
 } from './segments.js';
 import { injectSceneHtml } from './inject.js';
 import { dimensions } from './state.js';
@@ -340,7 +340,7 @@ async function renderSegment(browser, segment, chosen, state, options) {
 }
 
 function finalizeSegments(manifest, checkpointDir, outPath, audio) {
-  const list = writeConcatList(checkpointDir, manifest.segments);
+  const list = writeConcatList(checkpointDir, assertUniqueSegments(manifest.segments));
   const result = spawnSync('ffmpeg', buildFinalizeArgs({
     listFile: list, audio, outPath, totalSeconds: manifest.totalFrames / manifest.fps
   }), { encoding: 'utf8' });
@@ -410,10 +410,16 @@ export async function renderVideo(state, outPath, {
       if (framesRendered !== segment.count) {
         throw new Error(`Segment ${segment.index} produced ${framesRendered} frames, expected ${segment.count}`);
       }
-      manifest.segments.push({
+      const entry = {
         index: segment.index, start: segment.start, count: segment.count,
-        bytes: fs.statSync(segmentPath(checkpointDir, segment.index)).size
-      });
+        bytes: fs.statSync(segmentPath(checkpointDir, segment.index)).size,
+        digest: fileDigest(segmentPath(checkpointDir, segment.index))
+      };
+      // A corrupt segment can be re-encoded on resume; replace its old entry
+      // instead of appending a duplicate that would be concatenated twice.
+      const existing = manifest.segments.findIndex((item) => item.index === segment.index);
+      if (existing >= 0) manifest.segments[existing] = entry;
+      else manifest.segments.push(entry);
       manifest.segments.sort((a, b) => a.index - b.index);
       writeManifest(checkpointDir, manifest);
     }

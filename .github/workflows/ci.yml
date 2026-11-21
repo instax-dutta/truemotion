@@ -58,7 +58,9 @@ jobs:
       - name: Run SIGKILL crash-resume test
         run: npm run test:crash
       - name: Run audio + segmented resume test
-        run: npm run test:audio-resume
+        run: |
+          npm run test:audio-resume
+          npm run test:segment-corruption
       - name: Verify CSP blocks external requests
         run: npm run test:csp
       - name: MCP schema rejection and skill cache invalidation
