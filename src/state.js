@@ -94,6 +94,29 @@ export function loadState(file, { onWarning } = {}) {
   try { return normalizeState(parsed, { onWarning: warn }); } catch (e) { throw new Error(`Invalid state in ${file}: ${e.message}`); }
 }
 
+export async function withStateLock(file, fn, { timeout = 30000, staleMs = 60000 } = {}) {
+  const lock = `${path.resolve(file)}.lock`;
+  const started = Date.now();
+  let handle;
+  while (handle === undefined && Date.now() - started < timeout) {
+    try {
+      handle = fs.openSync(lock, 'wx');
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      try {
+        if (Date.now() - fs.statSync(lock).mtimeMs > staleMs) fs.unlinkSync(lock);
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 10 + Math.random() * 20));
+    }
+  }
+  if (handle === undefined) throw new Error(`Timed out acquiring state lock for ${file}`);
+  try {
+    return await fn();
+  } finally {
+    try { fs.closeSync(handle); fs.unlinkSync(lock); } catch {}
+  }
+}
+
 export function saveState(file, state) {
   const dir = path.dirname(path.resolve(file));
   fs.mkdirSync(dir, { recursive: true });

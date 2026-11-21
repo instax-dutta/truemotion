@@ -15,7 +15,7 @@ cloud service or model SDK. Every dependency is local.
 
 | Module | Responsibility |
 | --- | --- |
-| `src/state.js` | Schema versioning/migration, state normalisation, validation, atomic save, scene CRUD, digests. |
+| `src/state.js` | Schema versioning/migration, state normalisation, validation, atomic save, cross-process state lock, scene CRUD, digests. |
 | `src/validate.js` | Contract validation, static seek-safety lint, evolve warnings. |
 | `src/inject.js` | Local token resolution: GSAP, fonts, icons, assets, typing runtime, CSP. |
 | `src/render.js` | Scene probe, frame capture, measurement, parallel rendering with page reuse. |
@@ -31,7 +31,9 @@ cloud service or model SDK. Every dependency is local.
 
 ## Data flow
 
-State JSON is loaded and normalised. Agents mutate scenes through MCP tools.
+State JSON is loaded and normalised. All MCP state mutations are serialised by
+a cross-process lock file, so concurrent harnesses cannot lose updates; long
+renders read state without holding the lock. Agents mutate scenes through MCP tools.
 Each write is validated and returns rendered checkpoints. Rendering injects
 tokens into the scene HTML, opens it in headless Chromium, seeks the single GSAP
 timeline to each frame time, and pipes PNG bytes directly into ffmpeg's stdin.

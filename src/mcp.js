@@ -4,7 +4,7 @@ import { z } from 'zod';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  loadState, saveState, sceneMetadata, addScene, patchScene, updateScene, sceneDigest
+  loadState, saveState, withStateLock, sceneMetadata, addScene, patchScene, updateScene, sceneDigest
 } from './state.js';
 import { validateSceneHtml, evolveGuide, evolveWarnings } from './validate.js';
 import { readSkillCached, listSkillFiles } from './skill.js';
@@ -19,12 +19,14 @@ const error = (value) => ({ isError: true, content: [{ type: 'text', text: value
 
 export async function startServer({ stateFile, skillDir, assetsDir, preview = true }) {
   const server = new McpServer({ name: 'truemotion', version: '0.3.0' });
-  const withState = async (fn) => {
+  const withState = async (fn) => withStateLock(stateFile, async () => {
     const state = loadState(stateFile);
     const result = await fn(state);
     saveState(stateFile, state);
     return result;
-  };
+  });
+  // Long renders must not hold the write lock for minutes.
+  const withStateRead = async (fn) => fn(loadState(stateFile));
   const previewFor = async (state, scene) => {
     if (!preview) return [];
     return (await sceneNotes(scene, state, { assetsDir })).blocks;
@@ -257,7 +259,7 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
       maxSegments: z.number().int().min(0).optional().describe('Render at most this many segments this call; the rest remain for a later resume.'),
       keepCheckpoints: z.boolean().optional()
     })
-  }, async (input) => withState(async (state) => {
+  }, async (input) => withStateRead(async (state) => {
     try {
       const baseDir = path.dirname(path.resolve(stateFile));
       const requested = path.isAbsolute(input.out) ? input.out : path.resolve(baseDir, input.out);

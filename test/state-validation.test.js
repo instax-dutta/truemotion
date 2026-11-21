@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { createState, loadState, saveState, normalizeState, SCHEMA_VERSION } from '../src/state.js';
+import { createState, loadState, saveState, normalizeState, withStateLock, SCHEMA_VERSION } from '../src/state.js';
 
 const scene = { id: 'abc', name: 'A', durationSec: 2, html: '<html></html>' };
 
@@ -58,6 +58,27 @@ test('normalizeState rejects malformed scenes and unknown dimensions', () => {
   assert.throws(() => normalizeState({ scenes: [{ ...scene, name: '' }] }), /no name/);
   assert.throws(() => normalizeState({ scenes: [{ ...scene, durationSec: -1 }] }), /durationSec/);
   assert.throws(() => normalizeState({ scenes: [{ ...scene, html: '  ' }] }), /no html/);
+});
+
+test('withStateLock serialises mutations and releases the lock', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-lock-'));
+  const file = path.join(dir, 'state.json');
+  saveState(file, createState());
+  const order = [];
+  await Promise.all([0, 1, 2].map((index) => withStateLock(file, async () => {
+    order.push(`start-${index}`);
+    const state = loadState(file);
+    state.scenes.push({ id: `s${index}`, name: `S${index}`, durationSec: 1, html: '<html></html>' });
+    saveState(file, state);
+    order.push(`end-${index}`);
+  })));
+  assert.equal(loadState(file).scenes.length, 3);
+  assert.deepEqual(fs.readdirSync(dir).filter((name) => name.endsWith('.lock')), []);
+  assert.equal(order.length, 6);
+  for (let i = 0; i < 3; i += 1) {
+    assert.ok(order.indexOf(`start-${i}`) < order.indexOf(`end-${i}`));
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('saveState writes atomically and loadState reads it back', () => {

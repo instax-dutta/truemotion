@@ -62,6 +62,7 @@
     "test:scene-order": "TRUEMOTION_SCENE_ORDER=1 node --test test/scene-order-resume.test.js",
     "test:settings-resume": "TRUEMOTION_SETTINGS_RESUME=1 node --test test/settings-resume.test.js",
     "test:component-resume": "TRUEMOTION_COMPONENT_RESUME=1 node --test test/component-resume.test.js",
+    "test:concurrent": "TRUEMOTION_CONCURRENT=1 node --test test/concurrent-mcp.test.js",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {
