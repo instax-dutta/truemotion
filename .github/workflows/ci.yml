@@ -51,5 +51,7 @@ jobs:
         run: npm run test:e2e
       - name: Run SIGKILL crash-resume test
         run: npm run test:crash
+      - name: Run audio + segmented resume test
+        run: npm run test:audio-resume
       - name: Multi-minute A/V drift check
         run: AV_SCENES=10 npm run bench:av
