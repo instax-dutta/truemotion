@@ -142,3 +142,6 @@ the digest.
 The digest also covers `sketchRefs` (metadata and the referenced PNG contents),
 so editing a sketch reference or replacing its image between a partial render
 and a resume is rejected. `npm run test:sketch-resume` verifies both cases.
+`npm run test:combined-mutation` mutates state, asset, audio and a checkpoint
+segment simultaneously and verifies resume fails without producing a film,
+writing a manifest or touching the corrupted segment.

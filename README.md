@@ -184,6 +184,7 @@ npm run test:scene-order # opt-in: reorder-detection on resume
 npm run test:settings-resume # opt-in: fps/resolution/segment-size changes on resume
 npm run test:component-resume # opt-in: built-in and custom component changes on resume
 npm run test:sketch-resume # opt-in: sketchRef metadata or PNG changes on resume
+npm run test:combined-mutation # opt-in: state, asset, audio and segment mutations together
 npm run test:concurrent # opt-in: concurrent MCP writes with no lost updates
 npm run test:contention # opt-in: 20 writers x 3 rounds sustained contention
 npm run selftest

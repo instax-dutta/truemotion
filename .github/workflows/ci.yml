@@ -71,6 +71,7 @@ jobs:
           npm run test:settings-resume
           npm run test:component-resume
           npm run test:sketch-resume
+          npm run test:combined-mutation
       - name: Concurrent MCP write safety
         run: |
           npm run test:concurrent
