@@ -179,6 +179,7 @@ npm run test:crash
 npm run test:audio-resume
 npm run test:csp
 npm run test:mcp-schema
+npm run test:long-av     # opt-in, ~3.5 minutes: two-minute 1080p A/V resume
 npm run selftest
 npm pack --dry-run
 npm run benchmark -- --write   # records docs/benchmarks/latest.md
