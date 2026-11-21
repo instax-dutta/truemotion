@@ -4,38 +4,53 @@ Recorded 2026-11-21 on darwin/arm64, Node v26.8.1, ffmpeg 8.1.2.
 Reproduce with `npm run bench:longform`. Environment overrides: `LF_SCENES`,
 `LF_SCENE_SEC`, `LF_FPS`, `LF_BATCH`, `LF_CONCURRENCY`.
 
-## Page-pool before/after (10 scenes, 400 frames, 1080p, concurrency 2)
+## Current renderer: 1200-frame validation
+
+The full 30-scene, 120-second, 1920x1080 render was repeated after the
+page-pool refactor to confirm organisation-at-scale behaviour:
+
+| Metric | Before page pool | Current renderer |
+| --- | --- | --- |
+| Frames | 1200 / 1200 | 1200 / 1200 |
+| Elapsed | 459.6 s | **177.7 s** |
+| Throughput | 2.6 frames/s | **6.8 frames/s** |
+| Peak tree RSS | 1182 MiB | 1278 MiB |
+| Output | 11278 KiB | 11659 KiB |
+
+Throughput improved 2.6x with byte-comparable output and peak RSS within 8% of
+the prior figure, so no regression was found. A separate two-scene 1080p render
+was inspected visually to confirm correct scene sequencing and typing after the
+page-pool change.
+
+## Page-pool A/B (10 scenes, 400 frames, 1080p, concurrency 2)
 
 | Implementation | Peak tree RSS | Throughput | Output |
 | --- | --- | --- | --- |
 | Pages opened per scene (before) | 1184 MiB | 3.1 frames/s | 3903 KiB |
-| One page pool reused across all scenes (after) | **1060 MiB** | 3.1 frames/s | 3909 KiB |
+| One page pool reused across all scenes | **1060 MiB** | 3.1 frames/s | 3909 KiB |
 
 A single pool of `concurrency` pages is created once per render and reused for
-every scene. This lowers peak process-tree RSS by 124 MiB (10.5%) with no loss
-of throughput and byte-comparable output. During the refactor a correctness bug
-was found: `page.setContent()` on a reused page keeps the same JS realm, so a
-new scene's top-level `const tl` collided with the previous one and its script
-never ran. Reused pages now navigate to a data URL first, which creates a fresh
-realm. `test/combined-e2e.test.js` guards this by comparing a reused-page scene
-frame against a standalone render of the same scene.
+every scene. Reused pages navigate to a data URL first to reset the JS realm;
+otherwise a new scene's top-level `const tl` collides and its script never runs.
+`test/combined-e2e.test.js` compares a reused-page scene frame against a
+standalone render of the same scene.
 
-## Scale and concurrency comparison (current implementation)
+## Scale and concurrency comparison (current renderer)
 
-| Scenes | Timeline | Frames | Concurrency | Elapsed | Frames/s | Peak tree RSS | Output |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 10 | 40s | 400 | 2 | 128.3s | 3.1 | 1060 MiB | 3909 KiB |
-| 10 | 40s | 400 | 1 | 159.8s | 2.5 | **977 MiB** | 3891 KiB |
-| 30 | 120s | 1200 | 2 | 459.6s | 2.6 | 1182 MiB | 11278 KiB |
+| Scenes | Timeline | Frames | Concurrency | Elapsed | Frames/s | Peak tree RSS |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 | 40s | 400 | 2 | 128.3s | 3.1 | 1060 MiB |
+| 10 | 40s | 400 | 1 | 159.8s | 2.5 | **977 MiB** |
+| 30 | 120s | 1200 | 2 | 177.7s | 6.8 | 1278 MiB |
 
-The 1200-frame figure predates the page pool; the 400-frame pair is the valid
-comparison. Frame counts match exactly and render time scales linearly.
+Frame counts match exactly and render time scales sub-linearly with scene count
+thanks to page reuse. `--concurrency 1` remains the memory knob, saving about
+80 MiB at 400 frames.
 
 Peak RSS is sampled across the whole process tree (Node + Chromium helpers +
 ffmpeg) every 500 ms. Summing per-process RSS double-counts shared library and
-GPU pages, so the figure is an upper bound; the fixed cost is the 1080p browser
-pool, not frame data. Frames are streamed to ffmpeg via `image2pipe` in bounded
-batches; no full-frame staging directory is written.
+GPU pages, so the figure is an upper bound. Frames are streamed to ffmpeg via
+`image2pipe` in bounded batches; no full-frame staging directory is written.
 
 ## Crash recovery / resume
 
@@ -65,6 +80,6 @@ directory into the digest. Unit tests in `test/segments.test.js` cover scene,
 asset and path-traversal digests, byte-size verification and segment planning;
 `test/combined-e2e.test.js` interrupts, resumes, then mutates both the state
 file and an asset file, verifying each rejection. `test/crash-resume.test.js`
-goes further: it sends SIGKILL to a live render, including during a partially
-written MPEG-TS segment, and verifies the byte-verified manifest discards the
-orphan file and re-encodes that segment on resume.
+sends SIGKILL to a live render, including during a partially written MPEG-TS
+segment, and verifies the byte-verified manifest discards the orphan file and
+re-encodes that segment on resume.

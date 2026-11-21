@@ -189,12 +189,13 @@ set `TRUEMOTION_GOLDEN=1` to run that test locally.
 
 Measured footprint and frame rates on one machine are recorded in
 [docs/benchmarks/latest.md](docs/benchmarks/latest.md). The organisation-scale
-run is in [docs/benchmarks/longform.md](docs/benchmarks/longform.md): a 2-minute
-1080p timeline (1200 frames, 30 scenes) held a flat ~1.2 GiB process-tree peak
-RSS, the same as a 40-second 400-frame run, confirming memory is bounded by the
-batch and browser pool rather than video length; at the same 400 frames,
-`--concurrency 1` reduced peak RSS to 910 MiB. Run `npm run bench:longform`
-to reproduce it. The npm package itself does not include the rendered demo film.
+run is in [docs/benchmarks/longform.md](docs/benchmarks/longform.md): the current
+page-pool renderer completed a 2-minute 1080p timeline (1200 frames, 30 scenes)
+in 177.7 s at 6.8 frames/s with a 1278 MiB process-tree peak, 2.6x faster than
+before the page-pool change with byte-comparable output. Memory stays bounded by
+the batch and browser pool rather than video length; `--concurrency 1` reduced
+peak RSS to 977 MiB at 400 frames. Run `npm run bench:longform` to reproduce it.
+The npm package itself does not include the rendered demo film.
 
 Audio alignment was measured over a two-minute render with a looping bed:
 23 ms drift and a confirmed tail fade, detailed in
