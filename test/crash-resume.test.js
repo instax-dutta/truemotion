@@ -74,13 +74,13 @@ test('SIGKILL during a partial MPEG-TS write discards the orphan on resume', { s
   const source = JSON.parse(fs.readFileSync('examples/pro-out/state.json', 'utf8'));
   fs.writeFileSync(stateFile, JSON.stringify({
     ...source,
-    scenes: Array.from({ length: 3 }, () => ({ ...source.scenes[0], durationSec: 4 }))
+    scenes: Array.from({ length: 6 }, () => ({ ...source.scenes[0], durationSec: 4 }))
   }));
 
   const args = [
     bin, 'render', '--state', stateFile, '--out', out,
     '--resolution', '540p', '--fps', '10', '--batch-size', '4',
-    '--segment-size', '60', '--keep-checkpoints'
+    '--segment-size', '240', '--keep-checkpoints'
   ];
   const segDir = `${out}.segments`;
   const manifestFile = path.join(segDir, 'resume.json');
@@ -96,15 +96,13 @@ test('SIGKILL during a partial MPEG-TS write discards the orphan on resume', { s
         const index = Number(file.match(/segment-(\d+)\.ts/)[1]);
         if (!complete.has(index)) {
           const filePath = path.join(segDir, file);
-          if (fs.statSync(filePath).size > 0) {
-            orphan = { filePath, index, bytes: fs.statSync(filePath).size };
-            break;
-          }
+          orphan = { filePath, index, bytes: fs.statSync(filePath).size };
+          break;
         }
       }
     }
     if (orphan) break;
-    await sleep(20);
+    await sleep(10);
   }
   assert.ok(orphan, 'expected an in-flight (not yet manifested) segment file');
 
@@ -122,7 +120,7 @@ test('SIGKILL during a partial MPEG-TS write discards the orphan on resume', { s
   });
   assert.equal(resumed.status, 0, resumed.stderr.slice(-1000));
   assert.ok(fs.existsSync(out));
-  assert.equal(probeFrames(out), 120);
+  assert.equal(probeFrames(out), 240);
 
   const after = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
   const entry = after.segments.find((segment) => segment.index === orphan.index);
