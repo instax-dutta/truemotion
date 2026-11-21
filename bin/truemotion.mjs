@@ -30,6 +30,7 @@ Usage:
   truemotion serve --state <state.json> [--skill <dir>] [--assets <dir>] [--no-preview]
   truemotion render --state <state.json> --out <video.mp4> [--fps 30] [--crf 18] [--audio <file>] [--assets <dir>]
   truemotion install-skill <target-dir>
+  truemotion doctor
 
 Any MCP-capable harness speaks stdio to "truemotion serve".
 Default state path: $TRUEMOTION_STATE_FILE or ./truemotion-state.json`);
@@ -82,6 +83,19 @@ async function main() {
     return;
   }
 
+  if (command === 'doctor') {
+    const checks = [];
+    const nodeVer = process.version;
+    checks.push(`node ${nodeVer} (>=20 required)`);
+    let ffmpegOk = false;
+    try { const r = (await import('node:child_process')).spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' }); ffmpegOk = r.status === 0; } catch {}
+    checks.push(`ffmpeg: ${ffmpegOk ? 'ok' : 'MISSING (needed for render)'}`);
+    let pwOk = false;
+    try { await import('playwright'); pwOk = true; } catch {}
+    checks.push(`playwright: ${pwOk ? 'ok' : 'MISSING'}`);
+    console.log(checks.join('\n'));
+    return;
+  }
   throw new Error(`Unknown command: ${command}`);
 }
 
