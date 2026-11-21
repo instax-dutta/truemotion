@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 import path from 'node:path';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { createState, saveState } from '../src/state.js';
 import { resolveSkillDir, installSkill } from '../src/skill.js';
 import { startServer } from '../src/mcp.js';
@@ -33,6 +35,7 @@ Usage:
   truemotion still --state <state.json> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]
   truemotion install-skill <target-dir>
   truemotion doctor
+  truemotion selftest
 
 Any MCP-capable harness speaks stdio to "truemotion serve".
 Default state path: $TRUEMOTION_STATE_FILE or ./truemotion-state.json`);
@@ -106,6 +109,40 @@ async function main() {
     const target = opts._[0];
     if (!target) throw new Error('install-skill requires a target directory');
     console.log(`Installed skill to ${installSkill(resolveSkillDir(opts.skill), target)}`);
+    return;
+  }
+
+  if (command === 'selftest') {
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'truemotion-selftest-'));
+    const file = path.join(dir, 'state.json');
+    saveState(file, createState());
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: [fileURLToPath(import.meta.url), 'serve', '--state', file, '--no-preview']
+    });
+    const client = new Client({ name: 'truemotion-selftest', version: '1.0.0' }, { capabilities: {} });
+    const minimal = '<!doctype html><html><head><style>.frame{width:100px;height:100px}</style></head><body><div class="frame"><h1>Self test</h1></div><script>window.__SCENE_TIMELINE__={paused:true,seek(){}};window.__SCENE_DURATION__=1;</script></body></html>';
+    try {
+      await client.connect(transport);
+      const call = async (name, args) => {
+        const result = await client.callTool({ name, arguments: args });
+        if (result.isError) throw new Error(`${name}: ${result.content.map((b) => b.text).join(' ')}`);
+        return result;
+      };
+      await call('get_scenes', {});
+      await call('add_scene', { name: 'Self test', durationSec: 1, html: minimal });
+      const persisted = JSON.parse(fs.readFileSync(file, 'utf8')).scenes;
+      if (persisted.length !== 1) throw new Error(`expected 1 persisted scene, found ${persisted.length}`);
+      await call('read_scene', { sceneId: persisted[0].id, purpose: 'digest' });
+      await call('patch_scene', { id: persisted[0].id, ops: [{ find: '>Self test<', replace: '>Self test ok<' }] });
+      await call('read_skill', { file: 'SKILL.md' });
+      console.log('selftest: PASS (5 tools, state persisted)');
+    } finally {
+      await client.close();
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
     return;
   }
 

@@ -42,6 +42,7 @@
     "test": "node --test test/*.test.js",
     "demo": "node examples/intro-demo.mjs",
     "demo:pro": "node examples/pro-demo.mjs",
+    "selftest": "node bin/truemotion.mjs selftest",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {

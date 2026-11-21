@@ -6,4 +6,5 @@
 - `truemotion still --state <file> --out <frame.png> [--scene <id|1>] [--time 1.5] [--resolution 720p] [--chrome <path>]` — export one seek-accurate frame as PNG. No ffmpeg needed; ideal for QA.
 - `truemotion install-skill <target-dir>` — copy skill dir.
 - `truemotion doctor` — report runtime prerequisites.
+- `truemotion selftest` — start a throwaway stdio server and exercise five tools plus state persistence. No browser needed.
 - `truemotion version` — print version.
