@@ -44,6 +44,18 @@ test('manifest persists atomically and detects complete segments by size', () =>
   assert.ok(!fs.existsSync(dir));
 });
 
+test('orphan segment files not in the manifest are ignored', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-orphan-'));
+  const manifest = emptyManifest(meta);
+  manifest.segments.push({ index: 0, start: 0, count: 40, bytes: 9 });
+  writeManifest(dir, manifest);
+  fs.writeFileSync(segmentPath(dir, 0), '123456789');
+  fs.writeFileSync(segmentPath(dir, 1), 'partial orphan');
+  const done = completedIndices(readManifest(dir), dir);
+  assert.deepEqual([...done], [0], 'orphan index 1 must not be considered complete');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('manifest compatibility rejects changed render settings', () => {
   const manifest = { ...emptyManifest(meta), finalized: false };
   assert.ok(manifestCompatible(manifest, meta));

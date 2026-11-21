@@ -58,7 +58,10 @@ resolution, segment size and audio path are validated the same way. The MCP
 directory into the digest. Unit tests in `test/segments.test.js` cover scene,
 asset and path-traversal digests, byte-size verification and segment planning;
 `test/combined-e2e.test.js` interrupts, resumes, then mutates both the state
-file and an asset file, verifying each rejection.
+file and an asset file, verifying each rejection. `test/crash-resume.test.js`
+goes further: it sends SIGKILL to a live render, including during a partially
+written MPEG-TS segment, and verifies the byte-verified manifest discards the
+orphan file and re-encodes that segment on resume.
 
 ## Audio/video alignment
 
