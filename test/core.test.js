@@ -75,6 +75,8 @@ test('injection resolves tokens and rejects unsupported ones', () => {
   assert.ok(out.includes('1920px'));
   assert.ok(out.includes('1080px'));
   assert.ok(out.includes('gsap'));
+  assert.ok(out.includes("http-equiv=\"Content-Security-Policy\""));
+  assert.ok(out.includes("connect-src 'none'"));
   assert.ok(!out.includes('{{GSAP}}'));
   assert.ok(!out.includes('{{FONTS_CSS}}'));
   assert.throws(() => injectSceneHtml('{{THREE}}', { width: 1, height: 1 }), /Unsupported/);

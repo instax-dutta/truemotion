@@ -112,6 +112,14 @@ export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
   let out = String(html).replaceAll('{{W}}', String(width)).replaceAll('{{H}}', String(height));
   out = injectFonts(out, getFontsCss());
 
+  // Keep scenes self-contained: no network, no external assets, no eval.
+  const CSP = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; media-src data: blob:; connect-src 'none';">`;
+  if (!/http-equiv=["']Content-Security-Policy/i.test(out)) {
+    out = /<head[^>]*>/i.test(out)
+      ? out.replace(/<head([^>]*)>/i, (_match, attrs) => `<head${attrs}>${CSP}`)
+      : CSP + out;
+  }
+
   const gsapTag = `<script>${getGsapSource()}<\/script>`;
   const withTyping = gsapTag + (/\bOMTyping\./.test(out) ? TYPING_SHIM : '');
   out = out.replace(/<!--\s*\{\{GSAP\}\}[^>]*-->/g, () => withTyping);
