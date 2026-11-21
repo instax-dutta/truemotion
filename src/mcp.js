@@ -7,7 +7,7 @@ import {
   loadState, saveState, sceneMetadata, addScene, patchScene, updateScene, sceneDigest
 } from './state.js';
 import { validateSceneHtml, evolveGuide, evolveWarnings } from './validate.js';
-import { readSkill, listSkillFiles } from './skill.js';
+import { readSkillCached, listSkillFiles } from './skill.js';
 import { sceneNotes, actorExitStates, matchedCut, renderVideo } from './render.js';
 import { makeContactSheet } from './sheet.js';
 import { optimizeAssetsInDir } from './assets.js';
@@ -178,12 +178,8 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
     })
   }, async ({ file }) => withState(async (state) => {
     state.stats.readSkillCalls += 1;
-    const key = file.replace(/\\/g, '/').replace(/^\/+/, '');
-    if (state.skillReadCache[key] !== undefined) return text(state.skillReadCache[key]);
     try {
-      const content = readSkill(skillDir, key);
-      state.skillReadCache[key] = content;
-      return text(content);
+      return text(readSkillCached(state, skillDir, file));
     } catch (e) {
       return error(e.message);
     }

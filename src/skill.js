@@ -31,6 +31,20 @@ export function readSkill(dir, file) {
   return fs.readFileSync(skillPath(dir, file), 'utf8');
 }
 
+export function readSkillCached(state, dir, file) {
+  const key = String(file).replace(/\\/g, '/').replace(/^\/+/, '').trim();
+  const target = skillPath(dir, key);
+  const stat = fs.statSync(target);
+  const fingerprint = `${stat.mtimeMs}:${stat.size}:${path.resolve(dir)}`;
+  const cached = state.skillReadCache[key];
+  if (cached && typeof cached === 'object' && cached.fingerprint === fingerprint) {
+    return cached.content;
+  }
+  const content = fs.readFileSync(target, 'utf8');
+  state.skillReadCache[key] = { content, fingerprint };
+  return content;
+}
+
 export function listSkillFiles(dir) {
   const out = [];
   const walk = (d, prefix = '') => {

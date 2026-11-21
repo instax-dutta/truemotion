@@ -59,3 +59,17 @@ directory into the digest. Unit tests in `test/segments.test.js` cover scene,
 asset and path-traversal digests, byte-size verification and segment planning;
 `test/combined-e2e.test.js` interrupts, resumes, then mutates both the state
 file and an asset file, verifying each rejection.
+
+## Audio/video alignment
+
+The e2e suite also renders a film with a 2-second looping audio bed under a
+4-second video and verifies alignment: video 4.000 s, audio within 50 ms
+(AAC frame granularity), and a measured fade-out of at least 3 dB between the
+middle of the film and its final 0.25 s. No drift was found, so no fix was
+needed. The fade-out start is derived from the exact frame count
+(`totalFrames / fps - 0.6`), keeping it aligned with the last video frame.
+
+Skill references are cached per state file, but the cache stores a file
+fingerprint (mtime, size, resolved directory). Editing a skill document or
+switching `--skill` directories invalidates the entry, verified in
+`test/skill-cache.test.js`.

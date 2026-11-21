@@ -27,7 +27,7 @@ cloud service or model SDK. Every dependency is local.
 | `src/assets.js` | Standalone ffmpeg image downscale and recompression. |
 | `src/filename.js` | Safe export filenames and output paths. |
 | `src/pathid.js` | DOM path fallback identifiers for unlabelled actors. |
-| `src/skill.js` | Skill directory resolution, listing, reading and installation. |
+| `src/skill.js` | Skill directory resolution, listing, fingerprint-based cached reading and installation. |
 
 ## Data flow
 

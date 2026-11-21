@@ -45,6 +45,8 @@
 - Added crash-resumable rendering with MPEG-TS segment checkpoints, a byte-verified manifest, `--segment-size`, `--max-segments`, `--resume` and `--keep-checkpoints`, with unit and MCP e2e coverage.
 - Added a scene/brand/component digest to the checkpoint manifest so `--resume` rejects a state file edited since checkpointing.
 - Extended that digest to hash `{{ASSET:...}}` file contents, and fixed `render_video` to pass the assets directory so MCP resumes detect asset edits.
+- Made skill-read caching fingerprint-based so edited skill files or a changed `--skill` directory invalidate stale entries.
+- Added A/V alignment coverage (looping bed, duration within 50 ms, measured fade-out); no drift found.
 
 ## 0.2.0
 

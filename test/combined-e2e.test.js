@@ -125,6 +125,35 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     assert.ok(assetRejected.isError, 'resume with changed asset must fail');
     assert.ok(assetRejected.content.find((b) => b.type === 'text').text.includes('state file changed'));
 
+    // Audio/video alignment with a looping bed shorter than the video.
+    const bed = path.join(dir, 'bed.m4a');
+    spawnSync('ffmpeg', [
+      '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2',
+      '-c:a', 'aac', bed, '-loglevel', 'error'
+    ]);
+    const avOut = path.join(dir, 'av.mp4');
+    await call('render_video', {
+      out: avOut, fps: 10, resolution: '540p',
+      batchSize: 4, segmentSize: 8, audio: bed
+    });
+    const avProbe = JSON.parse(spawnSync('ffprobe', [
+      '-v', 'error', '-show_entries', 'stream=codec_type,duration',
+      '-of', 'json', avOut
+    ], { encoding: 'utf8' }).stdout);
+    const video = avProbe.streams.find((s) => s.codec_type === 'video');
+    const audio = avProbe.streams.find((s) => s.codec_type === 'audio');
+    assert.ok(audio, 'audio stream must be present');
+    assert.equal(Number(video.duration), 4);
+    assert.ok(Math.abs(Number(audio.duration) - Number(video.duration)) < 0.05,
+      `audio ${audio.duration}s vs video ${video.duration}s`);
+    const level = (start, length) => spawnSync('ffmpeg', [
+      '-ss', String(start), '-t', String(length), '-i', avOut,
+      '-map', '0:a:0', '-af', 'volumedetect', '-f', 'null', '-'
+    ], { encoding: 'utf8' }).stderr.match(/mean_volume: ([-\d.]+) dB/)?.[1];
+    const middle = Number(level(1.5, 1));
+    const ending = Number(level(3.7, 0.25));
+    assert.ok(ending < middle - 3, `fade-out missing: middle ${middle} dB, end ${ending} dB`);
+
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);
   } finally {
