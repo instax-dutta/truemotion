@@ -36,19 +36,45 @@ export function createState({ aspect = '16:9', resolution = '1080p', projectId =
   };
 }
 
+export function normalizeState(raw) {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.scenes)) {
+    throw new Error('Invalid state shape: missing scenes array');
+  }
+  const aspect = raw.aspect ?? '16:9';
+  const resolution = raw.resolution ?? '1080p';
+  dimensions(aspect, resolution);
+  const scenes = raw.scenes.map((scene, index) => {
+    if (!scene || typeof scene !== 'object') throw new Error(`Scene ${index + 1} is not an object`);
+    if (typeof scene.id !== 'string' || !scene.id) throw new Error(`Scene ${index + 1} has no id`);
+    if (typeof scene.name !== 'string' || !scene.name) throw new Error(`Scene ${index + 1} has no name`);
+    const duration = Number(scene.durationSec);
+    if (!Number.isFinite(duration) || duration <= 0) throw new Error(`Scene ${index + 1} has an invalid durationSec`);
+    if (typeof scene.html !== 'string' || !scene.html.trim()) throw new Error(`Scene ${index + 1} has no html`);
+    return { ...scene, durationSec: duration };
+  });
+  return {
+    ...raw,
+    aspect,
+    resolution,
+    scenes,
+    sketchRefs: Array.isArray(raw.sketchRefs) ? raw.sketchRefs : [],
+    skillReadCache: raw.skillReadCache && typeof raw.skillReadCache === 'object' ? raw.skillReadCache : {},
+    stats: raw.stats && typeof raw.stats === 'object' ? raw.stats : { readSkillCalls: 0, writeSceneCalls: 0 }
+  };
+}
+
 export function loadState(file) {
   if (!fs.existsSync(file)) throw new Error(`State file not found: ${file}`);
   const raw = fs.readFileSync(file, 'utf8');
   let parsed;
   try { parsed = JSON.parse(raw); } catch (e) { throw new Error(`Invalid state JSON in ${file}: ${e.message}`); }
-  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.scenes)) throw new Error(`Invalid state shape in ${file}: missing scenes array`);
-  return parsed;
+  try { return normalizeState(parsed); } catch (e) { throw new Error(`Invalid state in ${file}: ${e.message}`); }
 }
 
 export function saveState(file, state) {
   const dir = path.dirname(path.resolve(file));
   fs.mkdirSync(dir, { recursive: true });
-  const tmp = `${file}.tmp`;
+  const tmp = `${file}.${process.pid}.${randomUUID()}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
   fs.renameSync(tmp, file);
 }
