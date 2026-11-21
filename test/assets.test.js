@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 import { pngHasAlpha, isOptimizable, optimizeAsset } from '../src/assets.js';
@@ -22,7 +23,9 @@ test('PNG colour type decides alpha detection', () => {
   assert.equal(isOptimizable('a.webp'), false);
 });
 
-test('optimizer downscales a local PNG without changing its extension', () => {
+const ffmpegAvailable = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' }).status === 0;
+
+test('optimizer downscales a local PNG without changing its extension', { skip: !ffmpegAvailable && 'ffmpeg not installed' }, () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-assets-'));
   const input = path.join(dir, 'sample.png');
   const png = new PNG({ width: 2000, height: 2000 });
