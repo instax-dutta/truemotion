@@ -41,25 +41,31 @@ export function chunkTimes(count, concurrency) {
   return groups;
 }
 
-async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, brand, components, chrome } = {}, existingBrowser) {
+async function openScene(html, { aspect = '16:9', resolution = '1080p', assetsDir, brand, components, chrome } = {}, existingBrowser, existingPage) {
   // Keep the CSS composition at source size so fixed-pixel layouts do not
   // reflow; scale only the raster via deviceScaleFactor.
   const [width, height] = dimensions(aspect, '1080p');
   const [outputWidth] = dimensions(aspect, resolution);
   const injected = injectSceneHtml(html, { width, height, assetsDir, brand, components });
   const browser = existingBrowser ?? await launchBrowser(chrome);
-  const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: outputWidth / width });
+  const ownsPage = !existingPage;
+  const page = existingPage ?? await browser.newPage({ viewport: { width, height }, deviceScaleFactor: outputWidth / width });
   const requests = new Set();
   const errors = [];
-  page.on('request', (req) => {
-    if (/^https?:/.test(req.url())) requests.add(req.url());
-  });
-  page.on('pageerror', (err) => errors.push(err.message));
+  if (ownsPage) {
+    page.on('request', (req) => {
+      if (/^https?:/.test(req.url())) requests.add(req.url());
+    });
+    page.on('pageerror', (err) => errors.push(err.message));
+  }
+  // A reused page shares its JS realm with setContent, so top-level `const`
+  // declarations from the previous scene would collide. Navigating resets it.
+  if (existingPage) await page.goto('data:text/html,<!doctype html><html><head></head><body></body></html>');
   await page.setContent(injected, { waitUntil: 'load' });
   await page.evaluate(async () => { await document.fonts.ready; });
   const ready = await page.evaluate(() => typeof window.__SCENE_TIMELINE__?.seek === 'function');
   if (!ready) {
-    await browser.close();
+    if (ownsPage) await browser.close();
     throw new Error('Scene did not expose a seekable window.__SCENE_TIMELINE__');
   }
   return { browser, page, width, height, requests, errors };
@@ -188,13 +194,15 @@ export async function renderFrames(html, { aspect = '16:9', resolution = '1080p'
   return result.frames;
 }
 
-async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, brand, components, concurrency, batchSize = timesSec.length, onBatch }) {
+async function renderFramesParallel(browser, html, { aspect, resolution, timesSec, assetsDir, brand, components, concurrency, batchSize = timesSec.length, onBatch, pool }) {
   const count = Math.min(Math.max(1, concurrency), Math.max(1, timesSec.length));
-  // Pages live for the whole scene, not one batch: page setup dominates the
-  // cost of short scenes, while batching still bounds in-memory frame buffers.
-  const pages = await Promise.all(
-    Array.from({ length: count }, () => openScene(html, { aspect, resolution, assetsDir, brand, components }, browser))
-  );
+  const opts = { aspect, resolution, assetsDir, brand, components };
+  // A shared pool is created once per render and reused across every scene;
+  // otherwise pages live for one scene only. Batching still bounds memory.
+  const usesPool = Boolean(pool?.length);
+  const pages = usesPool
+    ? await Promise.all(pool.slice(0, count).map((page) => openScene(html, opts, browser, page)))
+    : await Promise.all(Array.from({ length: count }, () => openScene(html, opts, browser)));
   try {
     const duration = await pages[0].page.evaluate(() => window.__SCENE_DURATION__);
     const size = Math.max(1, Math.floor(batchSize));
@@ -213,7 +221,7 @@ async function renderFramesParallel(browser, html, { aspect, resolution, timesSe
     }
     return renderedCount;
   } finally {
-    await Promise.all(pages.map((ctx) => ctx.page.close()));
+    if (!usesPool) await Promise.all(pages.map((ctx) => ctx.page.close()));
   }
 }
 
@@ -296,7 +304,7 @@ export async function matchedCut(previous, candidate, state, { assetsDir, chrome
 async function renderSegment(browser, segment, chosen, state, options) {
   const {
     aspect, resolution, assetsDir, audio, crf, concurrency,
-    batchSize, checkpointDir, chrome
+    batchSize, checkpointDir, chrome, pool
   } = options;
   const frames = chosen.slice(segment.start, segment.start + segment.count);
   const encoder = createEncoder({
@@ -314,7 +322,7 @@ async function renderSegment(browser, segment, chosen, state, options) {
       await renderFramesParallel(browser, scene.html, {
         aspect, resolution, timesSec: sceneFrames.map((f) => f.time), assetsDir,
         brand: state.brand, components: state.components,
-        concurrency: Math.min(concurrency, sceneFrames.length), batchSize,
+        concurrency: Math.min(concurrency, sceneFrames.length), batchSize, pool,
         onBatch: async (rendered) => {
           for (const frame of rendered) {
             await encoder.write(Buffer.from(frame, 'base64'));
@@ -378,11 +386,22 @@ export async function renderVideo(state, outPath, {
   const budget = Number.isFinite(maxSegments) ? pending.slice(0, Math.max(0, maxSegments)) : pending;
 
   const browser = budget.length ? await launchBrowser(chrome) : null;
+  let pool = [];
+  if (browser) {
+    const [sourceWidth, sourceHeight] = dimensions(state.aspect, '1080p');
+    const [outputWidth] = dimensions(state.aspect, outputResolution);
+    pool = await Promise.all(Array.from({ length: Math.max(1, concurrency) }, () =>
+      browser.newPage({
+        viewport: { width: sourceWidth, height: sourceHeight },
+        deviceScaleFactor: outputWidth / sourceWidth
+      })
+    ));
+  }
   try {
     for (const segment of budget) {
       const framesRendered = await renderSegment(browser, segment, chosen, state, {
         aspect: state.aspect, resolution: outputResolution, assetsDir, audio, crf,
-        concurrency, batchSize: size, checkpointDir, fps, chrome
+        concurrency, batchSize: size, checkpointDir, fps, chrome, pool
       });
       if (framesRendered !== segment.count) {
         throw new Error(`Segment ${segment.index} produced ${framesRendered} frames, expected ${segment.count}`);

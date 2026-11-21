@@ -79,7 +79,7 @@ function assetDataUrl(rel, assetsDir) {
 
 export const TYPING_SHIM = `<script data-om-typing-runtime>(function(){
   window.__OM_TYPING_RUNTIME__=true;
-  window.OMTyping=window.OMTyping||{
+  window.OMTyping={
     _writes:[],
     _flush:function(){for(var i=0;i<this._writes.length;i++){this._writes[i]();}},
     attach:function(cfg){

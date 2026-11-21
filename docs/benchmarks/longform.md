@@ -4,32 +4,38 @@ Recorded 2026-11-21 on darwin/arm64, Node v26.8.1, ffmpeg 8.1.2.
 Reproduce with `npm run bench:longform`. Environment overrides: `LF_SCENES`,
 `LF_SCENE_SEC`, `LF_FPS`, `LF_BATCH`, `LF_CONCURRENCY`.
 
-## Scale and concurrency comparison
+## Page-pool before/after (10 scenes, 400 frames, 1080p, concurrency 2)
+
+| Implementation | Peak tree RSS | Throughput | Output |
+| --- | --- | --- | --- |
+| Pages opened per scene (before) | 1184 MiB | 3.1 frames/s | 3903 KiB |
+| One page pool reused across all scenes (after) | **1060 MiB** | 3.1 frames/s | 3909 KiB |
+
+A single pool of `concurrency` pages is created once per render and reused for
+every scene. This lowers peak process-tree RSS by 124 MiB (10.5%) with no loss
+of throughput and byte-comparable output. During the refactor a correctness bug
+was found: `page.setContent()` on a reused page keeps the same JS realm, so a
+new scene's top-level `const tl` collided with the previous one and its script
+never ran. Reused pages now navigate to a data URL first, which creates a fresh
+realm. `test/combined-e2e.test.js` guards this by comparing a reused-page scene
+frame against a standalone render of the same scene.
+
+## Scale and concurrency comparison (current implementation)
 
 | Scenes | Timeline | Frames | Concurrency | Elapsed | Frames/s | Peak tree RSS | Output |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 10 | 40s | 400 | 2 | 154.9s | 2.6 | 1208 MiB | 3755 KiB |
+| 10 | 40s | 400 | 2 | 128.3s | 3.1 | 1060 MiB | 3909 KiB |
 | 10 | 40s | 400 | 1 | 159.8s | 2.5 | **977 MiB** | 3891 KiB |
 | 30 | 120s | 1200 | 2 | 459.6s | 2.6 | 1182 MiB | 11278 KiB |
 
-Settings: 1080p, 10 fps, 24-frame batches. The concurrency-1 run was repeated
-after the asset-digest change; 977 MiB is within run-to-run variance of the
-earlier 910 MiB figure, with no regression from hashing asset files.
+The 1200-frame figure predates the page pool; the 400-frame pair is the valid
+comparison. Frame counts match exactly and render time scales linearly.
 
-## Findings
-
-- **Memory is bounded by the batch and browser pool, not video length.** Peak
-  RSS is flat between 400 and 1200 frames at concurrency 2 (1208 vs 1182 MiB,
-  a 2% decrease), and render time scales linearly at 2.6 frames/s.
-- **`--concurrency` is the memory knob.** Dropping from 2 pages to 1 at the
-  same 400 frames lowers peak tree RSS by roughly 230-300 MiB (20-25%).
-- Peak RSS is sampled across the whole process tree (Node + Chromium helpers +
-  ffmpeg) every 500 ms. Summing per-process RSS double-counts shared library
-  and GPU pages, so the figure is an upper bound; the fixed cost is the 1080p
-  browser pool, not frame data.
-- Frames are streamed to ffmpeg via `image2pipe` in bounded batches; no
-  full-frame staging directory is written. Renders can be split across
-  invocations with `--segment-size`, `--max-segments` and `--resume`.
+Peak RSS is sampled across the whole process tree (Node + Chromium helpers +
+ffmpeg) every 500 ms. Summing per-process RSS double-counts shared library and
+GPU pages, so the figure is an upper bound; the fixed cost is the 1080p browser
+pool, not frame data. Frames are streamed to ffmpeg via `image2pipe` in bounded
+batches; no full-frame staging directory is written.
 
 ## Crash recovery / resume
 
@@ -62,17 +68,3 @@ file and an asset file, verifying each rejection. `test/crash-resume.test.js`
 goes further: it sends SIGKILL to a live render, including during a partially
 written MPEG-TS segment, and verifies the byte-verified manifest discards the
 orphan file and re-encodes that segment on resume.
-
-## Audio/video alignment
-
-The e2e suite also renders a film with a 2-second looping audio bed under a
-4-second video and verifies alignment: video 4.000 s, audio within 50 ms
-(AAC frame granularity), and a measured fade-out of at least 3 dB between the
-middle of the film and its final 0.25 s. No drift was found, so no fix was
-needed. The fade-out start is derived from the exact frame count
-(`totalFrames / fps - 0.6`), keeping it aligned with the last video frame.
-
-Skill references are cached per state file, but the cache stores a file
-fingerprint (mtime, size, resolved directory). Editing a skill document or
-switching `--skill` directories invalidates the entry, verified in
-`test/skill-cache.test.js`.

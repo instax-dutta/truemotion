@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { createState, saveState } from '../src/state.js';
@@ -10,6 +11,13 @@ import { diffPng } from '../src/diff.js';
 import { COMBINED_HTML, COMBINED_BRAND } from '../examples/combined-scene.mjs';
 
 const enabled = process.env.TRUEMOTION_E2E === '1';
+
+function ffmpegFrame(video, time, output) {
+  const result = spawnSync('ffmpeg', [
+    '-y', '-ss', String(time), '-i', video, '-frames:v', '1', output, '-loglevel', 'error'
+  ]);
+  assert.equal(result.status, 0, 'ffmpeg frame extraction failed');
+}
 
 test('combined token scene authors through MCP and renders distinct frames', { skip: !enabled && 'set TRUEMOTION_E2E=1' }, async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-combined-e2e-'));
@@ -49,7 +57,6 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     assert.ok(renderText.includes('Rendered 20 frames'), renderText);
     assert.ok(fs.existsSync(path.join(dir, 'out.mp4')));
 
-    const { spawnSync } = await import('node:child_process');
     const probe = JSON.parse(spawnSync('ffprobe', [
       '-v', 'error', '-show_entries', 'format=duration',
       '-show_entries', 'stream=nb_frames', '-of', 'json', path.join(dir, 'out.mp4')
@@ -153,6 +160,33 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     const middle = Number(level(1.5, 1));
     const ending = Number(level(3.7, 0.25));
     assert.ok(ending < middle - 3, `fade-out missing: middle ${middle} dB, end ${ending} dB`);
+
+    // Page-pool regression: a later scene must render identically on a reused
+    // page as it does standalone (no stale const bindings or typing runtime).
+    const typingScene = assetState.scenes[0];
+    const plainScene = {
+      ...typingScene,
+      name: 'Plain',
+      html: typingScene.html.replace('OMTyping.attach(', 'void (0) && OMTyping.attach(')
+    };
+    const multiState = { ...assetState, scenes: [plainScene, typingScene] };
+    const multiFile = path.join(dir, 'multi.json');
+    fs.writeFileSync(multiFile, JSON.stringify(multiState));
+    const multiOut = path.join(dir, 'multi.mp4');
+    const multiRender = spawnSync(process.execPath, [
+      bin, 'render', '--state', multiFile, '--out', multiOut,
+      '--resolution', '540p', '--fps', '10', '--batch-size', '5'
+    ], { encoding: 'utf8' });
+    assert.equal(multiRender.status, 0, multiRender.stderr.slice(-800));
+    ffmpegFrame(multiOut, 6.5, path.join(dir, 'multi-frame.png'));
+    const { renderFrames } = await import('../src/render.js');
+    const expected = await renderFrames(typingScene.html, {
+      aspect: '16:9', resolution: '540p', timesSec: [2.5],
+      brand: COMBINED_BRAND, assetsDir
+    });
+    const diff = diffPng(fs.readFileSync(path.join(dir, 'multi-frame.png')), Buffer.from(expected[0].base64Png, 'base64'));
+    assert.ok(diff.changedRatio < 0.02,
+      `reused-page scene differs from standalone render (${(diff.changedRatio * 100).toFixed(2)}%)`);
 
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);

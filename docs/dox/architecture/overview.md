@@ -35,9 +35,11 @@ State JSON is loaded and normalised. Agents mutate scenes through MCP tools.
 Each write is validated and returns rendered checkpoints. Rendering injects
 tokens into the scene HTML, opens it in headless Chromium, seeks the single GSAP
 timeline to each frame time, and pipes PNG bytes directly into ffmpeg's stdin.
-Pages are opened once per scene and reused across batches; only `batchSize`
-frames are held in memory at once, and stdin backpressure is awaited, so memory
-stays flat for long videos and no staging directory is written. Long renders are
+A single pool of browser pages is created once per render and reused across all
+scenes (reused pages navigate to a fresh data URL first to reset the JS realm).
+Only `batchSize` frames are held in memory at once, and stdin backpressure is
+awaited, so memory stays flat for long videos and no staging directory is
+written. Long renders are
 split into MPEG-TS segments with a verified manifest, allowing an interrupted
 render to resume without re-encoding completed frames.
 

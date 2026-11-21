@@ -43,6 +43,7 @@
   tests, an e2e streaming regression and a long-form benchmark with peak RSS.
 - Added a reproducible multi-minute 1080p long-form benchmark with whole-process-tree RSS sampling; confirmed flat memory across 400 and 1200 frames and a 25% RSS reduction at `--concurrency 1`.
 - Added crash-resumable rendering with MPEG-TS segment checkpoints, a byte-verified manifest, `--segment-size`, `--max-segments`, `--resume` and `--keep-checkpoints`, with unit and MCP e2e coverage.
+- Reused a single browser-page pool across all scenes in `renderVideo`, lowering 1080p peak tree RSS by 10.5% (1184 -> 1060 MiB at 400 frames) with no throughput loss. Fixed a related realm bug where reused pages kept stale top-level declarations.
 - Added a scene/brand/component digest to the checkpoint manifest so `--resume` rejects a state file edited since checkpointing.
 - Extended that digest to hash `{{ASSET:...}}` file contents, and fixed `render_video` to pass the assets directory so MCP resumes detect asset edits.
 - Made skill-read caching hash-based (SHA-256) so edited skill files, including same-size edits, invalidate stale entries.
