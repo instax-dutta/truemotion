@@ -5,7 +5,7 @@ import { createEncoder, buildFinalizeArgs } from './encode.js';
 import {
   checkpointDirFor, manifestPath, segmentPath, emptyManifest, readManifest,
   writeManifest, clearCheckpoint, completedIndices, planSegments,
-  manifestCompatible, writeConcatList, sceneDigest
+  manifestCompatible, writeConcatList, sceneDigest, fileDigest
 } from './segments.js';
 import { injectSceneHtml } from './inject.js';
 import { dimensions } from './state.js';
@@ -363,14 +363,18 @@ export async function renderVideo(state, outPath, {
   const meta = {
     fps, resolution: outputResolution,
     totalFrames: chosen.length, segmentSize: segmentFrames,
-    audio: audio || null, digest: sceneDigest(state, assetsDir)
+    audio: audio || null, audioDigest: fileDigest(audio),
+    digest: sceneDigest(state, assetsDir)
   };
 
   let manifest = resume ? readManifest(checkpointDir) : null;
   if (resume && manifest && !manifestCompatible(manifest, meta)) {
     const mismatch = manifest.digest && meta.digest && manifest.digest !== meta.digest
       ? 'the state file changed since checkpointing'
-      : 'render settings changed since checkpointing';
+      : (manifest.audio ?? null) !== (meta.audio ?? null) ||
+        (manifest.audioDigest ?? null) !== (meta.audioDigest ?? null)
+        ? 'the audio bed changed since checkpointing'
+        : 'render settings changed since checkpointing';
     throw new Error(`Cannot resume: ${mismatch}. Use a fresh render without --resume.`);
   }
   if (manifest && !manifestCompatible(manifest, meta)) manifest = null;

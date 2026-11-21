@@ -51,6 +51,7 @@
 - Added an explicit `schemaVersion` to state files with migration warnings for legacy/older files and rejection of newer schemas.
 - Added genuine SIGKILL crash-resume tests: one after a checkpoint, one during a partially written MPEG-TS segment, verifying orphan files are discarded and re-encoded. Wired crash, A/V drift and schema validation into CI.
 - Added an end-to-end test combining looping audio with segmented checkpoint/resume, verifying frame count, A/V duration alignment and tail fade after concatenation.
+- Added a SHA-256 digest of the audio bed to the checkpoint manifest; changing the bed path or content between partial and resume is rejected.
 
 ## 0.2.0
 

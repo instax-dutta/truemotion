@@ -74,7 +74,9 @@ The manifest stores a SHA-256 digest of the scenes (HTML, names, durations),
 brand, components and the contents of every file referenced by `{{ASSET:...}}`
 tokens. Changing any of these between a partial render and a resume fails with a
 clear error instead of producing a mismatched film; render settings such as fps,
-resolution, segment size and audio path are validated the same way. The MCP
+resolution and segment size are validated the same way. The audio bed is checked
+by both path and SHA-256 content digest, so editing the bed file at the same
+path also rejects the resume. The MCP
 `render_video` tool exposes the same options and passes the configured assets
 directory into the digest. Unit tests in `test/segments.test.js` cover scene,
 asset and path-traversal digests, byte-size verification and segment planning;

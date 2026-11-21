@@ -106,6 +106,11 @@ export function planSegments(totalFrames, segmentSize) {
   }));
 }
 
+export function fileDigest(file) {
+  if (!file || !fs.existsSync(file)) return null;
+  return createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
 export function manifestCompatible(manifest, meta) {
   if (!manifest || manifest.version !== MANIFEST_VERSION || manifest.finalized) return false;
   if (manifest.digest && meta.digest && manifest.digest !== meta.digest) return false;
@@ -113,7 +118,8 @@ export function manifestCompatible(manifest, meta) {
     manifest.resolution === meta.resolution &&
     manifest.totalFrames === meta.totalFrames &&
     manifest.segmentSize === meta.segmentSize &&
-    (manifest.audio ?? null) === (meta.audio ?? null);
+    (manifest.audio ?? null) === (meta.audio ?? null) &&
+    (manifest.audioDigest ?? null) === (meta.audioDigest ?? null);
 }
 
 export function writeConcatList(dir, segments) {

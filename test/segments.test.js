@@ -6,7 +6,7 @@ import path from 'node:path';
 import {
   manifestPath, segmentPath, emptyManifest, writeManifest, readManifest,
   clearCheckpoint, completedIndices, planSegments, manifestCompatible, writeConcatList,
-  sceneDigest, MANIFEST_VERSION, referencedAssets, assetFileHashes
+  sceneDigest, MANIFEST_VERSION, referencedAssets, assetFileHashes, fileDigest
 } from '../src/segments.js';
 
 const sampleState = {
@@ -62,6 +62,25 @@ test('manifest compatibility rejects changed render settings', () => {
   assert.ok(!manifestCompatible(manifest, { ...meta, fps: 24 }));
   assert.ok(!manifestCompatible(manifest, { ...meta, totalFrames: 99 }));
   assert.ok(!manifestCompatible({ ...manifest, finalized: true }, meta));
+});
+
+test('audio path and content changes reject a resume', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-audio-digest-'));
+  const bedA = path.join(dir, 'a.m4a');
+  const bedB = path.join(dir, 'b.m4a');
+  fs.writeFileSync(bedA, 'audio A');
+  fs.writeFileSync(bedB, 'audio B');
+  const base = { ...meta, audio: bedA, audioDigest: fileDigest(bedA) };
+  const manifest = { ...emptyManifest(base), finalized: false };
+
+  assert.ok(manifestCompatible(manifest, base));
+  assert.ok(!manifestCompatible(manifest, { ...base, audio: bedB, audioDigest: fileDigest(bedB) }),
+    'a different audio path must be rejected');
+  assert.ok(!manifestCompatible(manifest, { ...base, audioDigest: fileDigest(bedB) }),
+    'different audio content at the same path must be rejected');
+  assert.equal(fileDigest(bedA), fileDigest(bedA));
+  assert.notEqual(fileDigest(bedA), fileDigest(bedB));
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('scene digest rejects state changes between checkpoint and resume', () => {

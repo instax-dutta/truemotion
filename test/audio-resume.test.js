@@ -78,5 +78,21 @@ test('multi-segment render with looping audio resumes with aligned A/V and tail 
   const tail = level(out, 7.7, 0.25);
   assert.ok(tail < middle - 3, `tail fade missing: middle ${middle} dB, tail ${tail} dB`);
 
+  // Changing the audio bed at the same path between checkpoint and resume
+  // must be rejected, as must pointing at a different bed.
+  const mutatedBed = path.join(dir, 'mutated.m4a');
+  spawnSync('ffmpeg', [
+    '-y', '-f', 'lavfi', '-i', 'sine=frequency=880:duration=3',
+    '-c:a', 'aac', mutatedBed, '-loglevel', 'error'
+  ]);
+  const mutated = spawnSync(process.execPath, [...args, '--resume', '--audio', mutatedBed], { encoding: 'utf8' });
+  assert.notEqual(mutated.status, 0, 'a different audio path must be rejected on resume');
+  assert.ok(mutated.stderr.includes('audio bed changed'), mutated.stderr.slice(-500));
+
+  fs.copyFileSync(mutatedBed, bed);
+  const contentChanged = spawnSync(process.execPath, [...args, '--resume'], { encoding: 'utf8' });
+  assert.notEqual(contentChanged.status, 0, 'different audio content at the same path must be rejected');
+  assert.ok(contentChanged.stderr.includes('audio bed changed'), contentChanged.stderr.slice(-500));
+
   fs.rmSync(dir, { recursive: true, force: true });
 });
