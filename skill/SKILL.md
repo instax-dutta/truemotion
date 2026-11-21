@@ -30,8 +30,8 @@ times, so every visible change must be a function of timeline position.
 - Explicit `window.__SCENE_DURATION__` in seconds.
 - Every entrance uses `fromTo()` with both states written out.
 - Tokens `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`,
-  `{{ASSET:...}}`, `{{ROUGH}}` and `{{FX}}` are inlined locally. Never reference
-  a CDN, a web font, or a local file path.
+  `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}` and `{{SHADERS}}` are inlined locally.
+  Never reference a CDN, a web font, or a local file path.
 - Available font families are `Display` (600, 900), `Body` (300, 400) and
   `Mono` (500). No other family names.
 - No emoji. Brand logos come from `{{ICON:slug}}`; generic icons are inline SVG.
@@ -61,5 +61,6 @@ with `read_skill`.
 - [blocks/typing-input.md](blocks/typing-input.md) - prompt-bar typing.
 - [blocks/rough.md](blocks/rough.md) - hand-drawn SVG helper for `{{ROUGH}}`.
 - [blocks/fx.md](blocks/fx.md) - local inline-CSS effects for `{{FX}}`.
+- [blocks/shaders.md](blocks/shaders.md) - CSS utility layer for `{{SHADERS}}`.
 - [patterns/](patterns/) - beat sheets by video type.
 - [examples/](examples/) - complete scene sketches.

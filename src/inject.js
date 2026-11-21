@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { ROUGH_SOURCE } from './rough.js';
 import { FX_SOURCE } from './fx.js';
+import { SHADERS_SOURCE } from './shaders.js';
 
 const require = createRequire(import.meta.url);
 
@@ -152,6 +153,10 @@ export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
   if (out.includes('{{FX}}')) out = out.replaceAll('{{FX}}', () => FX_SOURCE);
   if (/\bOMFX\./.test(out) && !out.includes('data-om-fx-runtime')) out = injectBeforeFirstScript(out, FX_SOURCE);
 
+  out = out.replace(/<!--\s*\{\{SHADERS\}\}[^>]*-->/g, () => SHADERS_SOURCE);
+  if (out.includes('{{SHADERS}}')) out = out.replaceAll('{{SHADERS}}', () => SHADERS_SOURCE);
+  if (/\bOMShaders\./.test(out) && !out.includes('data-om-shaders-runtime')) out = injectBeforeFirstScript(out, SHADERS_SOURCE);
+
   const gsapTag = `<script>${getGsapSource()}<\/script>`;
   const withTyping = gsapTag + (/\bOMTyping\./.test(out) ? TYPING_SHIM : '');
   out = out.replace(/<!--\s*\{\{GSAP\}\}[^>]*-->/g, () => withTyping);
@@ -162,9 +167,9 @@ export function injectSceneHtml(html, { width, height, assetsDir } = {}) {
   out = out.replace(/\{\{ICON:([^}]+)\}\}/g, (_m, spec) => iconDataUrl(spec.trim()));
   out = out.replace(/\{\{ASSET:([^}]+)\}\}/g, (_m, rel) => assetDataUrl(rel.trim(), assetsDir));
 
-  const unsupported = [...out.matchAll(/\{\{(THREE|SHADERS|BRAND:[^}]+|COMPONENT:[^}]+)\}\}/g)].map((m) => m[1]);
+  const unsupported = [...out.matchAll(/\{\{(THREE|BRAND:[^}]+|COMPONENT:[^}]+)\}\}/g)].map((m) => m[1]);
   if (unsupported.length) {
-    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}}, {{ASSET:...}}, {{ROUGH}} and {{FX}}.`);
+    throw new Error(`Unsupported injection token(s): ${[...new Set(unsupported)].join(', ')}. TrueMotion core supports {{GSAP}}, {{FONTS_CSS}}, {{W}}, {{H}}, {{ICON:...}}, {{ASSET:...}}, {{ROUGH}}, {{FX}} and {{SHADERS}}.`);
   }
   return out;
 }

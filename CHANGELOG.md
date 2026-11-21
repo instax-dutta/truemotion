@@ -28,6 +28,8 @@
   golden-frame coverage.
 - Added a standalone `{{FX}}` inline-CSS effects helper with unit and
   golden-frame coverage.
+- Added a standalone `{{SHADERS}}` CSS utility layer with unit and golden-frame
+  coverage.
 
 ## 0.2.0
 
