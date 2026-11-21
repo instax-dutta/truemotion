@@ -8,4 +8,5 @@
 - `truemotion install-skill <target-dir>` — copy skill dir.
 - `truemotion doctor [--state <file>]` — report Node, ffmpeg, browser, skill docs and state-file health.
 - `truemotion selftest` — start a throwaway stdio server and exercise five tools plus state persistence. No browser needed.
+- `npm run benchmark` / `npm run bench:longform` — record short and multi-minute render benchmarks with RSS sampling.
 - `truemotion version` — print version.

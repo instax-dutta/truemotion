@@ -186,6 +186,9 @@ font-free geometric scenes rendered at 540p, so they stay stable across hosts;
 set `TRUEMOTION_GOLDEN=1` to run that test locally.
 
 Measured footprint and frame rates on one machine are recorded in
-[docs/benchmarks/latest.md](docs/benchmarks/latest.md). Run the benchmark on
-your own hardware to get comparable numbers; the npm package itself is about
-430 KiB and does not include the rendered demo film.
+[docs/benchmarks/latest.md](docs/benchmarks/latest.md). The organisation-scale
+run is in [docs/benchmarks/longform.md](docs/benchmarks/longform.md): a 2-minute
+1080p timeline (1200 frames, 30 scenes) held a flat ~1.2 GiB process-tree peak
+RSS, the same as a 40-second 400-frame run, confirming memory is bounded by the
+batch and browser pool rather than video length. Run `npm run bench:longform`
+to reproduce it. The npm package itself does not include the rendered demo film.
