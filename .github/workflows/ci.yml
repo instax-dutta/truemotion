@@ -41,3 +41,5 @@ jobs:
         run: node node_modules/playwright-core/cli.js install chromium
       - name: Run golden-frame regression
         run: npm test
+      - name: Run combined-token MCP end-to-end test
+        run: npm run test:e2e
