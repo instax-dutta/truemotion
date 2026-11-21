@@ -183,6 +183,7 @@ npm run test:long-av     # opt-in, ~3.5 minutes: two-minute 1080p A/V resume
 npm run test:scene-order # opt-in: reorder-detection on resume
 npm run test:settings-resume # opt-in: fps/resolution/segment-size changes on resume
 npm run test:component-resume # opt-in: built-in and custom component changes on resume
+npm run test:sketch-resume # opt-in: sketchRef metadata or PNG changes on resume
 npm run test:concurrent # opt-in: concurrent MCP writes with no lost updates
 npm run test:contention # opt-in: 20 writers x 3 rounds sustained contention
 npm run selftest

@@ -28,6 +28,20 @@ export function assetFileHashes(state, assetsDir) {
   return hashes;
 }
 
+export function sketchFileHashes(state, assetsDir) {
+  const hashes = {};
+  if (!assetsDir) return hashes;
+  const root = path.resolve(assetsDir);
+  for (const ref of state.sketchRefs ?? []) {
+    const safe = String(ref.relativePath ?? '').replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!safe || safe.includes('..')) continue;
+    const file = path.resolve(root, safe);
+    if (!file.startsWith(root + path.sep) || !fs.existsSync(file)) continue;
+    hashes[ref.relativePath] = createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  }
+  return hashes;
+}
+
 export function sceneDigest(state, assetsDir) {
   const canonical = {
     aspect: state.aspect,
@@ -37,7 +51,16 @@ export function sceneDigest(state, assetsDir) {
       id: scene.id, name: scene.name,
       durationSec: scene.durationSec, html: scene.html
     })),
-    assets: assetFileHashes(state, assetsDir)
+    assets: assetFileHashes(state, assetsDir),
+    sketchFiles: sketchFileHashes(state, assetsDir),
+    sketchRefs: (state.sketchRefs ?? []).map((ref) => ({
+      sceneId: ref.sceneId,
+      sceneName: ref.sceneName,
+      relativePath: ref.relativePath,
+      width: ref.width,
+      height: ref.height,
+      sketchElements: ref.sketchElements ?? null
+    }))
   };
   return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
 }

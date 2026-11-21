@@ -7,7 +7,7 @@ import {
   manifestPath, segmentPath, emptyManifest, writeManifest, readManifest,
   clearCheckpoint, completedIndices, planSegments, manifestCompatible, writeConcatList,
   sceneDigest, MANIFEST_VERSION, referencedAssets, assetFileHashes, fileDigest,
-  segmentComplete, assertUniqueSegments
+  segmentComplete, assertUniqueSegments, sketchFileHashes
 } from '../src/segments.js';
 
 const sampleState = {
@@ -97,6 +97,27 @@ test('manifest compatibility rejects changed render settings', () => {
   assert.ok(!manifestCompatible(manifest, { ...meta, fps: 24 }));
   assert.ok(!manifestCompatible(manifest, { ...meta, totalFrames: 99 }));
   assert.ok(!manifestCompatible({ ...manifest, finalized: true }, meta));
+});
+
+test('sketch refs and their file contents are hashed into the digest', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-sketch-digest-'));
+  fs.writeFileSync(path.join(dir, 'sketch.png'), 'sketch one');
+  const ref = { sceneId: 'a', sceneName: 'A', relativePath: 'sketch.png', width: 100, height: 50 };
+  const state = { ...sampleState, scenes: sampleState.scenes, sketchRefs: [ref] };
+  const digest = sceneDigest(state, dir);
+  assert.ok(sketchFileHashes(state, dir)['sketch.png']);
+
+  const relabeled = { ...state, sketchRefs: [{ ...ref, sceneName: 'Renamed' }] };
+  assert.notEqual(sceneDigest(relabeled, dir), digest, 'sketch ref metadata change must alter digest');
+
+  const sizeBefore = fs.statSync(path.join(dir, 'sketch.png')).size;
+  fs.writeFileSync(path.join(dir, 'sketch.png'), 'sketch TWO');
+  assert.equal(fs.statSync(path.join(dir, 'sketch.png')).size, sizeBefore);
+  assert.notEqual(sceneDigest(state, dir), digest, 'same-size sketch file change must alter digest');
+
+  const escaping = { ...state, sketchRefs: [{ ...ref, relativePath: '../secret.png' }] };
+  assert.deepEqual(sketchFileHashes(escaping, dir), {});
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('brand changes alter the scene digest', () => {

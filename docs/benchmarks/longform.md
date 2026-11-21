@@ -136,5 +136,9 @@ incompatible frame geometry. `npm run test:component-resume` covers the same
 guarantee for `components` definitions: changing a component's markup while
 scenes, brand, assets and audio stay identical changes the digest and rejects
 the resume without rewriting the manifest. Both built-in overrides and custom
-component keys are covered; a unit test separately verifies brand changes alter
+component keys are covered; unit tests separately verify brand changes alter
 the digest.
+
+The digest also covers `sketchRefs` (metadata and the referenced PNG contents),
+so editing a sketch reference or replacing its image between a partial render
+and a resume is rejected. `npm run test:sketch-resume` verifies both cases.

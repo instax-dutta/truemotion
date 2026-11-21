@@ -70,6 +70,7 @@ jobs:
           npm run test:scene-order
           npm run test:settings-resume
           npm run test:component-resume
+          npm run test:sketch-resume
       - name: Concurrent MCP write safety
         run: |
           npm run test:concurrent
