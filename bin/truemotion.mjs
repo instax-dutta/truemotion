@@ -5,6 +5,7 @@ const require = createRequire(import.meta.url);
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { sanitizeOutputPath } from '../src/filename.js';
 import { createState, saveState } from '../src/state.js';
 import { resolveSkillDir, installSkill } from '../src/skill.js';
 import { startServer } from '../src/mcp.js';
@@ -73,7 +74,7 @@ async function main() {
   if (command === 'render') {
     const { loadState } = await import('../src/state.js');
     if (!opts.out) throw new Error('render requires --out <video.mp4>');
-    const result = await renderVideo(loadState(stateFile), opts.out, {
+    const result = await renderVideo(loadState(stateFile), sanitizeOutputPath(opts.out), {
       fps: Number(opts.fps || 30),
       crf: Number(opts.crf || 18),
       resolution: opts.resolution || undefined,
@@ -102,9 +103,10 @@ async function main() {
       chrome: opts.chrome ? path.resolve(opts.chrome) : undefined,
       assetsDir: opts.assets ? path.resolve(opts.assets) : path.join(path.dirname(path.resolve(stateFile)), 'assets')
     });
-    fs.mkdirSync(path.dirname(path.resolve(opts.out)), { recursive: true });
-    fs.writeFileSync(opts.out, Buffer.from(frame.base64Png, 'base64'));
-    console.log(`Wrote ${path.resolve(opts.out)} at ${opts.time || 0}s from scene ${scene.name}`);
+    const output = sanitizeOutputPath(opts.out);
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.writeFileSync(output, Buffer.from(frame.base64Png, 'base64'));
+    console.log(`Wrote ${output} at ${opts.time || 0}s from scene ${scene.name}`);
     return;
   }
 

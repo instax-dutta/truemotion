@@ -11,6 +11,7 @@ import { readSkill } from './skill.js';
 import { sceneNotes, actorExitStates, matchedCut, renderVideo } from './render.js';
 import { makeContactSheet } from './sheet.js';
 import { optimizeAssetsInDir } from './assets.js';
+import { sanitizeOutputPath } from './filename.js';
 import { percent } from './diff.js';
 
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
@@ -252,7 +253,8 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
   }, async (input) => withState(async (state) => {
     try {
       const baseDir = path.dirname(path.resolve(stateFile));
-      const out = path.isAbsolute(input.out) ? input.out : path.resolve(baseDir, input.out);
+      const requested = path.isAbsolute(input.out) ? input.out : path.resolve(baseDir, input.out);
+      const out = sanitizeOutputPath(requested);
       const result = await renderVideo(state, out, {
         fps: input.fps ?? 30,
         resolution: input.resolution,

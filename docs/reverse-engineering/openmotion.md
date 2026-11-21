@@ -25,6 +25,7 @@ is copied into this repository. The artefacts were read, not executed.
 | `HtmlVideoComposition.tsx` uses Remotion `delayRender` / `continueRender` around each seek. | Replaced with a two-frame `requestAnimationFrame` settle in Playwright. Same deterministic intent, no Remotion dependency or its two-tier license. |
 | Spike test HTML sets a strict Content-Security-Policy: `default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src data: blob:`. | Adopted: the injector now adds a local-only CSP so a scene cannot reach the network even if authored badly. |
 | `verifyMotionSkill` is an in-process self-test that drives the agent and asserts scene writes happened. | Inspired a lightweight `selftest` command for the stdio tool path. |
+| `sanitizeExportFilename` replaces filesystem-unsafe characters and collapses whitespace, falling back to `Untitled`. | Adopted as `src/filename.js`, applied to `render`, `still` and `render_video` output paths. |
 | `optimizeImportedImage` downscales large imports to 2200 px and prefers JPEG when there is no alpha. | Adopted as `src/assets.js`: a standalone ffmpeg implementation with PNG alpha detection, in-place filename preservation, a CLI command and an MCP tool. |
 | Brand-kit scraping, Excalidraw sketches, sound mixing, Electron GUI. | Not adopted: those are UI concerns of the original app, not the agent-facing core. |
 

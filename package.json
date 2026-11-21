@@ -33,7 +33,12 @@
     "README.md",
     "LICENSE",
     "NOTICE.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "!examples/out/",
+    "!examples/pro-out/",
+    "!examples/**/*.mp4",
+    "!examples/**/*.m4a",
+    "!examples/**/*.wav"
   ],
   "engines": {
     "node": ">=20"
