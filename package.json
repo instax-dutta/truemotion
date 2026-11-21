@@ -57,6 +57,7 @@
     "test:crash": "TRUEMOTION_CRASH=1 node --test test/crash-resume.test.js",
     "test:audio-resume": "TRUEMOTION_AUDIO_RESUME=1 node --test test/audio-resume.test.js",
     "test:csp": "TRUEMOTION_CSP=1 node --test test/csp.test.js",
+    "test:mcp-schema": "TRUEMOTION_MCP_SCHEMA=1 node --test test/mcp-schema-skill.test.js",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {

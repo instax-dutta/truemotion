@@ -55,5 +55,7 @@ jobs:
         run: npm run test:audio-resume
       - name: Verify CSP blocks external requests
         run: npm run test:csp
+      - name: MCP schema rejection and skill cache invalidation
+        run: npm run test:mcp-schema
       - name: Multi-minute A/V drift check
         run: AV_SCENES=10 npm run bench:av

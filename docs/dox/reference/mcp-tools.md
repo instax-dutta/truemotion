@@ -1,5 +1,11 @@
 # MCP Tools
 
+All tools load and validate the state file before running. A state written by a
+newer schema version is rejected with a clear error across every tool; legacy
+files are migrated with a warning to stderr and persisted on the next write.
+`read_skill` caches documents by SHA-256 content hash, so an edited skill file
+is re-read on the next call even when the state file already holds a cache entry.
+
 - `get_scenes` — scene metadata.
 - `read_scene` — full/evolve/digest.
 - `update_scene` — rewrite one scene.
