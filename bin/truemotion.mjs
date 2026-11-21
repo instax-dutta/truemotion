@@ -173,21 +173,32 @@ async function main() {
     const major = Number(process.versions.node.split('.')[0]);
     checks.push(`node ${process.version}: ${major >= 20 ? 'ok' : 'UNSUPPORTED (20+ required)'}`);
     const ffmpeg = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
-    checks.push(`ffmpeg: ${ffmpeg.status === 0 ? 'ok' : 'MISSING (needed for render)'}`);
+    checks.push(`ffmpeg: ${ffmpeg.status === 0 ? 'ok (' + (ffmpeg.stdout || '').split('\n')[0] + ')' : 'MISSING (needed for render)'}`);
     let pwExecutable = null;
     try {
       const { chromium } = await import('playwright');
       pwExecutable = chromium.executablePath();
-      checks.push(`playwright: ok (${pwExecutable})`);
+      checks.push(`playwright: ok (${pwExecutable})${fs.existsSync(pwExecutable) ? '' : ' - BROWSER NOT DOWNLOADED'}`);
     } catch { checks.push('playwright: MISSING'); }
     const systemChrome = findSystemChrome();
     checks.push(`system chrome: ${systemChrome ?? 'none found'}`);
     const explicit = browserOptions().executablePath;
-    const chosen = explicit ?? pwExecutable;
+    if (explicit) checks.push(`TRUEMOTION_CHROME: ${fs.existsSync(explicit) ? 'ok' : 'PATH DOES NOT EXIST'} (${explicit})`);
+    const chosen = explicit ?? (pwExecutable && fs.existsSync(pwExecutable) ? pwExecutable : null) ?? systemChrome;
     checks.push(`browser in use: ${chosen ?? 'NONE - run npx playwright install chromium'}`);
     if (!explicit && !pwExecutable && systemChrome) {
       checks.push(`hint: export TRUEMOTION_CHROME="${systemChrome}" to use the installed Chrome`);
     }
+    try {
+      const dir = resolveSkillDir(opts.skill);
+      const { listSkillFiles } = await import('../src/skill.js');
+      checks.push(`skill docs: ok (${listSkillFiles(dir).length} references in ${dir})`);
+    } catch (e) { checks.push(`skill docs: MISSING (${e.message})`); }
+    try {
+      const { loadState } = await import('../src/state.js');
+      const loaded = loadState(stateFile);
+      checks.push(`state file: ok (${loaded.scenes.length} scenes, ${loaded.aspect}, ${loaded.resolution})`);
+    } catch (e) { checks.push(`state file: ${e.message}`); }
     console.log(checks.join('\n'));
     return;
   }
