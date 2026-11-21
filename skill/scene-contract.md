@@ -63,6 +63,12 @@ A static validator rejects a document that lacks `.frame`,
 
 An HTML comment containing `{{GSAP}}` works, but a bare token is clearer.
 
+The renderer injects a Content-Security-Policy that sets `default-src 'none'`
+and `connect-src 'none'`. External requests from an authored scene are blocked;
+inline scripts, injected fonts, data URLs and blob URLs still work. This keeps
+rendering offline and reproducible even if a scene accidentally references a
+remote URL.
+
 ## Seek-safe motion
 
 - Build one timeline and put every moving thing on it.

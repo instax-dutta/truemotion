@@ -56,6 +56,7 @@
     "test:e2e": "TRUEMOTION_E2E=1 node --test test/combined-e2e.test.js",
     "test:crash": "TRUEMOTION_CRASH=1 node --test test/crash-resume.test.js",
     "test:audio-resume": "TRUEMOTION_AUDIO_RESUME=1 node --test test/audio-resume.test.js",
+    "test:csp": "TRUEMOTION_CSP=1 node --test test/csp.test.js",
     "check": "node --test test/*.test.js && npm pack --dry-run"
   },
   "dependencies": {

@@ -177,6 +177,7 @@ npm test
 npm run test:e2e
 npm run test:crash
 npm run test:audio-resume
+npm run test:csp
 npm run selftest
 npm pack --dry-run
 npm run benchmark -- --write   # records docs/benchmarks/latest.md
