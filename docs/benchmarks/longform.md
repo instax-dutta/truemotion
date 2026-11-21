@@ -91,4 +91,8 @@ covered by both unit and crash-suite tests. The digest is order sensitive:
 reordering scenes without editing any of them changes it, so a resumed render
 rejects the reordered state. `npm run test:scene-order` (opt-in) exercises this
 through the CLI, asserting that the rejected resume leaves both the manifest
-and the absence of a final film unchanged.
+and the absence of a final film unchanged. `npm run test:settings-resume`
+(opt-in) covers render-setting changes: fps, resolution and segment size are
+each rejected on resume with "render settings changed since checkpointing"
+while the state and audio stay identical, so a checkpoint cannot be reused with
+incompatible frame geometry.
