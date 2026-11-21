@@ -63,6 +63,8 @@ jobs:
           npm run test:settings-resume
           npm run test:component-resume
       - name: Concurrent MCP write safety
-        run: npm run test:concurrent
+        run: |
+          npm run test:concurrent
+          npm run test:contention
       - name: Multi-minute A/V drift check
         run: AV_SCENES=10 npm run bench:av
