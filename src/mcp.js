@@ -278,7 +278,7 @@ export async function startServer({ stateFile, skillDir, assetsDir, preview = tr
         keepCheckpoints: input.keepCheckpoints ?? false
       });
       if (result.partial) {
-        return text(`Checkpoint: ${result.frames}/${state.scenes.reduce((s, sc) => s + sc.durationSec, 0) * (input.fps ?? 30)} frames done. ${result.segmentsRemaining} segment(s) left. Resume with resume:true.`);
+        return text(`Checkpoint: ${result.frames}/${result.totalFrames} frames done. ${result.segmentsRemaining} segment(s) left. Resume with resume:true.`);
       }
       return text(`Rendered ${result.frames} frames to ${result.output}${result.resumed ? ' (resumed)' : ''}`);
     } catch (e) {

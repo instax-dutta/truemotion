@@ -425,6 +425,7 @@ export async function renderVideo(state, outPath, {
   if (remaining.length) {
     return {
       frames: manifest.segments.reduce((sum, s) => sum + s.count, 0),
+      totalFrames: manifest.totalFrames,
       output: null,
       partial: true,
       segmentsRendered: budget.length,

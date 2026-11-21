@@ -53,7 +53,8 @@
 - Added an end-to-end test combining looping audio with segmented checkpoint/resume, verifying frame count, A/V duration alignment and tail fade after concatenation.
 - Added a SHA-256 digest of the audio bed to the checkpoint manifest; changing the bed path or content between partial and resume is rejected.
 - Added a real-browser e2e test verifying the injected CSP blocks external network requests while the scene timeline still runs.
-- Added MCP-level tests that a newer state schema is rejected across tools and that edited skill files are re-read despite a populated cache.
+- Added MCP-level tests that a newer state schema is rejected across tools, that edited skill files are re-read despite a populated cache, and that rejected writes leave the state file byte-identical.
+- Partial render progress now reports the total frames of the selected time range instead of the whole timeline.
 
 ## 0.2.0
 

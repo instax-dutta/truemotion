@@ -26,6 +26,7 @@ test('MCP rejects a newer schema across read and write tools', { skip: !enabled 
   const parsed = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
   parsed.schemaVersion = 999;
   fs.writeFileSync(stateFile, JSON.stringify(parsed));
+  const original = fs.readFileSync(stateFile);
 
   const client = await clientFor(stateFile);
   try {
@@ -33,6 +34,8 @@ test('MCP rejects a newer schema across read and write tools', { skip: !enabled 
       ['get_scenes', {}],
       ['read_scene', { sceneId: 'missing' }],
       ['add_scene', { name: 'X', durationSec: 1, html: '<html></html>' }],
+      ['update_scene', { id: 'missing', html: '<html></html>' }],
+      ['patch_scene', { id: 'missing', ops: [{ find: 'x', replace: 'y' }] }],
       ['read_skill', { file: 'SKILL.md' }],
       ['list_skills', {}]
     ]) {
@@ -40,7 +43,11 @@ test('MCP rejects a newer schema across read and write tools', { skip: !enabled 
       assert.ok(result.isError, `${name} must reject a newer schema`);
       const message = result.content.map((block) => block.text).join(' ');
       assert.ok(/newer than supported/.test(message), `${name}: expected clear error, got ${message.slice(0, 160)}`);
+      assert.ok(fs.readFileSync(stateFile).equals(original),
+        `${name} must leave the state file byte-identical after rejection`);
     }
+    assert.equal(fs.readdirSync(dir).filter((file) => file.endsWith('.tmp')).length, 0,
+      'rejected writes must not leave temporary files');
   } finally {
     await client.close();
     fs.rmSync(dir, { recursive: true, force: true });

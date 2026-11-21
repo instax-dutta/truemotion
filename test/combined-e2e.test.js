@@ -188,6 +188,15 @@ test('combined token scene authors through MCP and renders distinct frames', { s
     assert.ok(diff.changedRatio < 0.02,
       `reused-page scene differs from standalone render (${(diff.changedRatio * 100).toFixed(2)}%)`);
 
+    // A partial render over a time range reports frames for that range only.
+    const rangeOut = path.join(dir, 'range.mp4');
+    const ranged = await call('render_video', {
+      out: rangeOut, fps: 5, resolution: '540p', batchSize: 2,
+      segmentSize: 4, maxSegments: 1, startSec: 0, endSec: 2
+    });
+    const rangeText = ranged.content.find((b) => b.type === 'text').text;
+    assert.ok(rangeText.includes('/10 frames'), `expected range total of 10 frames, got ${rangeText.slice(0, 160)}`);
+
     // The review contact sheet proves frames differed (rendered-frame feedback).
     assert.ok(reviewText.length > 0);
   } finally {
