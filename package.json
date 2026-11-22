@@ -40,7 +40,8 @@
     "!examples/pro-out/",
     "!examples/**/*.mp4",
     "!examples/**/*.m4a",
-    "!examples/**/*.wav"
+    "!examples/**/*.wav",
+    "!examples/**/*.gif"
   ],
   "engines": {
     "node": ">=20"
@@ -50,6 +51,7 @@
     "demo": "node examples/intro-demo.mjs",
     "demo:pro": "node examples/pro-demo.mjs",
     "demo:launch": "node examples/launch-film.mjs",
+    "gif:launch": "node scripts/make-gif.mjs",
     "selftest": "node bin/truemotion.mjs selftest",
     "benchmark": "node scripts/benchmark.mjs",
     "bench:longform": "node scripts/longform-benchmark.mjs",

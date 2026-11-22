@@ -2,55 +2,58 @@
 
 [![CI](https://github.com/instax-dutta/truemotion/actions/workflows/ci.yml/badge.svg)](https://github.com/instax-dutta/truemotion/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
+[![MCP](https://img.shields.io/badge/protocol-stdio%20MCP-purple.svg)](https://modelcontextprotocol.io)
 
-An open, harness-agnostic core for authoring and rendering motion-graphics video scenes.
+# Describe the video. Your agent makes it.
 
-![Eight scenes from the launch film](docs/launch-film-contact-sheet.png)
+**TrueMotion is an open-source motion-graphics studio that runs as a stdio MCP server. A coding agent writes self-contained HTML scenes, gets rendered frames and objective measurements back after every change, corrects its own work, and exports a frame-accurate MP4. No GUI, no account, no cloud, no model SDK, no per-render fee.**
 
-The [finished 37-second launch film](examples/launch-out/launch-film.mp4) tells the
-agent story: describe the film, watch the agent author it through MCP, see the
-rendered frames and measurements it gets back, watch it correct a clipped actor,
-then the frame-accurate render and the open-source CTA. Its feedback scene embeds
-**real frames rendered by TrueMotion**, not mockups. The creative plan and
-verification evidence are in [STORYBOARD.md](examples/launch-out/STORYBOARD.md).
-Regenerate with `npm run demo:launch`.
+![TrueMotion launch film: an agent authors a video, sees returned frames and measurements, corrects a clipped actor, and renders a frame-accurate film](https://raw.githubusercontent.com/instax-dutta/truemotion/main/examples/launch-out/launch-film.gif)
 
-The earlier [29-second pro demo](examples/pro-out/pro-demo.mp4) is also included;
-regenerate it with `npm run demo:pro`. Its sixth scene ("The toolkit") deliberately
-exercises every local helper in one shot: `{{BRAND:*}}`, `{{COMPONENT:*}}`,
-`{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}` and `{{THREE}}`. Its contact sheet is
-[here](docs/demo-contact-sheet.png).
+*The 37-second [launch film](examples/launch-out/launch-film.mp4), authored end to end through TrueMotion's MCP tools. The "returned frames" you see are real renderer output. [Storyboard and verification notes](examples/launch-out/STORYBOARD.md).*
 
-This project was recovered by reverse engineering **OpenMotion 1.1.0** (`/Applications/OpenMotion.app`, an Electron + React app signed by "Meta Dots", updater `anovius/openmotion`). The original ships its tools through an embedded MCP server wired to the Claude Agent SDK and Codex SDK. TrueMotion keeps the useful part, the tool contract, the scene format, and the motion-design references, and drops everything that ties it to one vendor: no Electron UI, no account, no license gate, no model SDK. The result is a plain stdio MCP server that any coding agent can drive, plus a renderer you can run yourself.
+---
 
-## What you get
+## What is TrueMotion?
 
-- Eleven MCP tools: `get_scenes`, `read_scene`, `update_scene`, `patch_scene`, `add_scene`, `read_skill`, `list_skills`, `view_sketch`, `review_timeline`, `render_video`, `optimize_assets`. An agent can author, audit, optimise assets and render a film without shell access.
-- Scene format: one self-contained HTML document per scene with a single paused GSAP timeline on `window.__SCENE_TIMELINE__`. Injection tokens `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`, `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{THREE}}`, `{{BRAND:*}}`, `{{COMPONENT:*}}` and the `OMTyping` runtime are resolved locally.
-- Contract validation (including a static seek-safety lint that rejects `from()`, external scripts or URLs, timers, `requestAnimationFrame`, CSS keyframes and transitions), evolve/digest reads, and rendered frame feedback after each write. Feedback is measured, not decorative: pixel-diff ratios for static slides and dead holds, duration/timeline mismatches, external requests, script errors, clipped actors and text under 18px. Evolved scenes get measured actor exit states, and a visible jump at an evolved cut is rejected with the two frames attached.
-- Rendering: Playwright seeks the timeline frame-by-frame, then PNG frames are piped straight into ffmpeg in bounded batches. No full-frame staging directory and no cloud service. Memory stays flat for long videos; 240 frames at 540p peaked at 78 MiB. Seeks fire GSAP `onUpdate` callbacks, so proxy-driven counters and typed text export correctly on a cold seek.
+TrueMotion gives an AI agent three things it needs to make a video without guesswork:
+
+1. **Tools it can call.** Eleven stdio MCP tools cover authoring, auditing, asset optimisation and rendering. Any MCP-capable harness works: Claude Code, Codex, Cursor, OpenCode and others.
+2. **Eyes on its own work.** Every scene write returns three rendered frames plus measurements: pixel-change ratios, dead holds, duration mismatches, external requests, script errors, clipped actors and tiny text. The agent can see a problem and fix it before you watch the film.
+3. **A renderer that finishes the job.** Frames are seeked from a single paused GSAP timeline, piped to ffmpeg in bounded batches, and encoded locally. Long renders can be checkpointed and resumed after a crash.
+
+Everything runs offline. The package is about 730 kB, the dependency tree is 56.1 MiB, and rendering needs only Node.js 20+, ffmpeg and an installed Chrome or Chromium.
+
+## Why agents can actually use it
+
+- **Feedback is measured, not decorative.** A static slide, a dead hold or a clipped actor is reported as a number and a frame, not a vibe. A visible jump at an evolved cut is rejected and both frames are attached to the error.
+- **Scenes are debuggable.** One HTML document per scene with one timeline on `window.__SCENE_TIMELINE__`. A static lint rejects anything that would break frame seeking: `from()`, timers, CSS keyframes, transitions or external URLs.
+- **Nothing is locked behind a vendor.** No Electron process, no embedded Claude/Codex SDK, no API keys, no license gate. Your harness talks stdio MCP; your machine renders the MP4.
+- **It handles long jobs.** Frames stream to ffmpeg in bounded batches, so memory stays flat with video length. A 1200-frame, 1080p, two-minute render held a 1278 MiB process-tree peak and ran 2.6× faster after page reuse. Interrupted renders resume from byte-verified, digest-checked segments.
+- **You can verify every claim.** 103 unit tests, pinned-browser golden frames, MCP end-to-end, crash, A/V, CSP, schema and concurrency suites all run in CI. Measured results are in [`docs/benchmarks/`](docs/benchmarks/).
 
 ## Install
 
 ```bash
+git clone https://github.com/instax-dutta/truemotion.git
 cd truemotion
 npm install
 ```
 
-TrueMotion uses `playwright-core` and does **not** download a browser. Install
-Chrome or Chromium on the host, or point it at an existing binary:
+You need **Node.js 20+**, **ffmpeg** on `PATH` (for `render` only), and **Chrome or Chromium** installed. TrueMotion uses `playwright-core` and never downloads a browser.
 
 ```bash
-export TRUEMOTION_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-# or pass --chrome <path> to render/serve
-truemotion doctor   # reports which browser will be used
+node bin/truemotion.mjs doctor   # reports browser, ffmpeg and state-file health
 ```
 
-If no browser is found, rendering fails with a clear message rather than
-silently downloading one. You also need `ffmpeg` on `PATH` for `render`
-(preview frames during MCP writes do not use it).
+If your browser is in a non-standard location:
 
-## Use with any harness
+```bash
+export TRUEMOTION_CHROME="/path/to/chrome"
+```
+
+## Connect your agent
 
 Create a state file, then point your harness at the stdio server:
 
@@ -58,36 +61,74 @@ Create a state file, then point your harness at the stdio server:
 node bin/truemotion.mjs init truemotion-state.json --aspect 16:9
 ```
 
-MCP configuration (the exact file name differs by harness):
+Add this to your harness's MCP config:
 
 ```json
 {
   "mcpServers": {
     "truemotion": {
       "command": "node",
-      "args": ["/absolute/path/to/truemotion/bin/truemotion.mjs", "serve",
-               "--state", "/absolute/path/to/truemotion-state.json"]
+      "args": [
+        "/absolute/path/to/truemotion/bin/truemotion.mjs",
+        "serve",
+        "--state", "/absolute/path/to/truemotion-state.json"
+      ]
     }
   }
 }
 ```
 
-That is all that is required: stdio MCP is supported by Claude Code, Codex, Cursor, OpenCode, and most other agents. No API keys, no vendor SDK, no Electron process.
-
-Optional flags for `serve`:
+That is the whole setup. The agent can now author, audit and render a film without shell access. Optional `serve` flags:
 
 - `--skill <dir>`: use a different motion-skill directory.
 - `--assets <dir>`: where `{{ASSET:...}}` files and sketch PNGs live (defaults to `assets/` beside the state file).
-- `--no-preview`: skip rendered frame feedback (faster, but the agent cannot see its own scenes).
+- `--no-preview`: skip rendered frame feedback (faster, but the agent loses its eyes).
 
-### Skill installation
-
-The agent needs the motion-design references. Either let the agent call `read_skill` through MCP, or copy the skill into your harness's skill folder:
+Install the motion-design references into your harness if you want them as native skills:
 
 ```bash
 node bin/truemotion.mjs install-skill ~/.claude/skills/truemotion
 node bin/truemotion.mjs install-skill ~/.agents/skills/truemotion
 ```
+
+## How it works
+
+1. **The agent reads the contract.** `read_skill` and `list_skills` load the scene format, motion rules and typography guidance on demand.
+2. **The agent writes a scene.** `add_scene` and `patch_scene` take self-contained HTML with one paused GSAP timeline. Injections for GSAP, fonts, icons, assets, hand-drawn shapes, effects, CSS-3D stages, brand values and components are all resolved locally.
+3. **The agent looks at the result.** Each write returns rendered checkpoint frames and measurements. `review_timeline` returns one contact sheet for the whole film.
+4. **TrueMotion renders.** Playwright seeks the timeline frame by frame; PNG frames stream to ffmpeg in bounded batches. Crash-safe segments let a long render resume where it stopped.
+
+## See it in action
+
+```bash
+npm run demo:launch   # 37s narrative launch film, 8 scenes, authored through MCP
+npm run demo:pro      # 29s art-directed demo, includes an all-token scene
+npm run demo          # 12s intro, smallest example of the tool contract
+```
+
+Outputs land in `examples/launch-out/`, `examples/pro-out/` and `examples/out/`. The launch film's feedback scene embeds frames rendered by TrueMotion itself. Regenerate the looping README GIF at any time with `npm run gif:launch`.
+
+## TrueMotion vs alternatives
+
+| | TrueMotion | OpenMotion | Remotion | Typical AI video generators |
+| --- | --- | --- | --- | --- |
+| License | MIT | Proprietary | Two-tier; company license for larger orgs | Varies, often subscription |
+| Interface | stdio MCP for any agent | Electron GUI + embedded Claude/Codex SDK | React components | Web app |
+| Runtime dependencies | Node, ffmpeg, local Chrome | Bundled Electron + model SDKs | Native compositor binaries | Cloud service |
+| Network at render time | None | Vendor services | None by default | Required |
+| Frame-accurate seeking | Yes, one paused GSAP timeline | Yes | Via React timeline | Usually no |
+| Feedback to the authoring agent | Rendered frames + measured defects after every write | GUI review | Developer inspection | Preview and regenerate |
+| Long renders | Bounded streaming + resumable digest-checked segments | Not documented | Standard render | Provider-managed |
+| All documented authoring tokens local | Yes | Proprietary bundles | Not applicable | Not applicable |
+
+TrueMotion was recovered by reverse engineering **OpenMotion 1.1.0** (an Electron + React app signed by "Meta Dots"). It keeps the useful tool contract, scene format and motion-design ideas, and drops everything tied to one vendor. All original proprietary documentation was replaced with MIT-licensed material; the provenance and rejected findings are recorded in [`docs/reverse-engineering/audit.md`](docs/reverse-engineering/audit.md).
+
+## What you get
+
+- **Eleven MCP tools:** `get_scenes`, `read_scene`, `update_scene`, `patch_scene`, `add_scene`, `read_skill`, `list_skills`, `view_sketch`, `review_timeline`, `render_video`, `optimize_assets`.
+- **Twelve local injection tokens:** `{{GSAP}}`, `{{FONTS_CSS}}`, `{{W}}`, `{{H}}`, `{{ICON:...}}`, `{{ASSET:...}}`, `{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}`, `{{THREE}}`, `{{BRAND:*}}`, `{{COMPONENT:*}}`, plus an injected `OMTyping` runtime.
+- **Contract validation** with a static seek-safety lint, evolve reads with measured actor exit states, and rendered-frame feedback after each write.
+- **Local rendering**: page-reuse pool, backpressure-aware ffmpeg streaming, checkpointed segments, cross-process state lock, and byte- and hash-verified resume.
 
 ## Render a video
 
@@ -95,52 +136,36 @@ node bin/truemotion.mjs install-skill ~/.agents/skills/truemotion
 node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --fps 30 --crf 18
 # fast draft at half resolution
 node bin/truemotion.mjs render --state truemotion-state.json --out draft.mp4 --resolution 540p --fps 15
-# optional music bed, looped and faded in/out around the video
+# loop and fade a music bed to the exact video length
 node bin/truemotion.mjs render --state truemotion-state.json --out video.mp4 --audio music.mp3
+# render only one beat
+node bin/truemotion.mjs render --state truemotion-state.json --out beat.mp4 --start 4 --end 8
 ```
 
-`--start 4 --end 8` renders only that global time range, which is useful for debugging one beat. `--concurrency N` renders frames on N browser pages in parallel and is the main speed control (default 2). `--batch-size N` controls the streaming batch (default 30); lower it to reduce peak memory on long videos or small machines. Frame order is preserved exactly; content is seek-deterministic, though subpixel antialiasing can vary marginally with the number of concurrent pages. `--crf` defaults to 18 (higher quality than ffmpeg's default). `--audio` loops the file, fades it in and out, and cuts it to the video length.
+`--concurrency N` sets the number of browser pages (default 2) and is the main speed control. `--batch-size N` bounds in-memory frames (default 30); lower it on small machines. `--crf` defaults to 18.
 
-Large project assets can be downscaled and recompressed locally. Filenames are
-preserved so `{{ASSET:...}}` tokens keep working:
+For a long or fragile render, split it across invocations:
 
 ```bash
+node bin/truemotion.mjs render --state state.json --out film.mp4 \
+  --segment-size 240 --max-segments 2 --keep-checkpoints
+node bin/truemotion.mjs render --state state.json --out film.mp4 \
+  --segment-size 240 --resume
+```
+
+Completed segments are MPEG-TS files with a verified manifest. A resume rejects a changed state file, asset, audio bed, sketch, component or segment rather than muxing stale frames.
+
+Other useful commands:
+
+```bash
+node bin/truemotion.mjs still --state state.json --out frame.png --scene 2 --time 1.5
 node bin/truemotion.mjs optimize-assets ./assets --max-dimension 2200
+node bin/truemotion.mjs validate-state --state state.json
 ```
-
-The same operation is available to agents as the `optimize_assets` MCP tool.
-It is a standalone ffmpeg implementation; no Electron or cloud service is involved.
-
-For frame-accurate QA without ffmpeg, export a single PNG:
-
-```bash
-node bin/truemotion.mjs still --state truemotion-state.json --out frame.png --scene 2 --time 1.5
-```
-
-Call `review_timeline` through MCP before finishing a video. It audits every scene and returns a short note plus one contact sheet of middle frames, so the connected model can fix its own work with a small image payload. Pass `contactSheet: false` to receive full-size frames instead.
-
-## Example
-
-`examples/intro-demo.mjs` authors a three-scene, 12-second intro entirely through the MCP tools (title reveal, capability assembly with an evolved matched cut, outro lockup) and renders it. Run it to see the tool contract in action:
-
-```bash
-node examples/intro-demo.mjs
-```
-
-The generated state and MP4 land in `examples/out/` (gitignored).
-
-For a larger, art-directed piece, run `node examples/pro-demo.mjs`. It authors seven scenes (kinetic wordmark, manifesto typography, prompt-to-film pipeline with typing, frame/count-up data visual, measured-continuity panels, an all-token toolkit scene, and an outro lockup) through the same MCP tools, runs `review_timeline`, and renders a 29-second 1080p H.264 film with a generated stereo ambient score into `examples/pro-out/`. The score is produced by `examples/ambient.py` (Python 3 with numpy): an Am-F-C-G-Am pad with sub layer, detuned voices, soft plucked arpeggio, breathing air texture, short feedback delays and fades, encoded to AAC. Every scene in it passes the motion audit with measured build and resolve change.
-
-For the narrative launch film built around the agent authoring loop (prompt to
-tool receipts to measured frames to correction to render), run
-`npm run demo:launch`. It authors eight scenes through MCP, runs
-`review_timeline`, and renders a 37-second 1080p film into
-`examples/launch-out/`. Its storyboard, blueprints and verification evidence are
-in [examples/launch-out/STORYBOARD.md](examples/launch-out/STORYBOARD.md).
 
 ## State file
 
-Plain JSON, so it is easy to inspect or version:
+Plain JSON, versioned and easy to commit:
 
 ```json
 {
@@ -159,89 +184,68 @@ Plain JSON, so it is easy to inspect or version:
 }
 ```
 
-This is intentionally compatible with OpenMotion's scene tool state. Files without `schemaVersion` are treated as legacy v0, migrated to v1 and reported on stderr; files written by a newer schema are rejected rather than silently misread. Save the file after a migration to persist the version.
+Files without `schemaVersion` are treated as legacy v0, migrated with a warning and saved on the next write. Files from a newer schema are rejected. Concurrent writes from multiple agents are serialised by a cross-process lock, so no update is lost.
+
+## FAQ
+
+**Does TrueMotion need an API key or a paid service?**
+No. Rendering is local and offline. You supply Node.js, ffmpeg and an installed browser. There is no account, cloud call or model SDK in the render path.
+
+**Which AI agents can drive it?**
+Any harness that speaks stdio MCP. It is tested with the MCP SDK and used from Claude Code, Codex, Cursor and OpenCode-style setups. The harness needs no vendor-specific integration.
+
+**Can an agent see and fix its own mistakes?**
+Yes. Every write returns rendered checkpoint frames and measured defects. `review_timeline` returns a contact sheet for the whole film. Clipped actors, tiny text, dead holds and mismatched durations are reported explicitly.
+
+**How does it compare with plain HTML video tools?**
+Scenes are seek-safe by construction: one paused GSAP timeline per scene, no timers or CSS animation, deterministic frames, and local injection for fonts, icons and effects. Contract validation rejects patterns that would break a frame-by-frame render.
+
+**Can it render long videos without running out of memory?**
+Yes. Frames stream to ffmpeg in bounded batches and browser pages are reused across scenes. Peak memory is governed by the batch size and browser pool, not video length. A 1200-frame 1080p run peaked at 1278 MiB; `--concurrency 1` lowers that to about 977 MiB at 400 frames.
+
+**What happens if a render crashes?**
+Segments already written are kept. A later `--resume` skips verified segments, re-encodes invalid ones and concatenates the final film. The manifest hashes scenes, assets, audio, sketches and each segment, so a changed input is rejected instead of silently producing a mismatched video.
+
+**Is it really free?**
+The source is MIT licensed. Dependencies keep their own licenses, documented in [`NOTICE.md`](NOTICE.md). npm publication is currently paused; the package is verified packable and the release workflow is ready.
 
 ## Scope and limits
 
-- Supported injection tokens are listed above. `{{ROUGH}}`, `{{FX}}` and `{{SHADERS}}` are small local deterministic helpers (`OMRough`, `OMFX`, `OMShaders`) with no third-party dependency. `{{BRAND:*}}` values come from the state file's `brand` object, `{{COMPONENT:*}}` expands built-in or state-defined snippets, and `{{THREE}}` is a CSS-3D stage helper rather than a WebGL bundle. All documented authoring tokens are supported locally.
-- There is no GUI, brand-kit scraper or in-app sound editor. The CLI can mux a single audio bed with `--audio`, but there is no timeline-level mixing.
-- Frame-by-frame seeking is deterministic but slow for long videos; use a lower `--fps` for drafts.
+- All documented authoring tokens are supported locally. `{{THREE}}` is a CSS-3D stage helper, not a WebGL renderer with lighting or materials.
+- There is no GUI, brand-kit scraper or in-app sound editor. The CLI muxes one audio bed with `--audio`.
+- Frame-by-frame seeking is deterministic but slower than a GPU compositor for very long films. Use a lower `--fps` for drafts.
 
 ## Documentation
 
-Full documentation lives in [`docs/dox/`](docs/dox/): getting-started, architecture, reference, contributing.
-
-## Contributing
-
-The formal reverse-engineering audit, including rejected findings and their
-rationale, is in [docs/reverse-engineering/audit.md](docs/reverse-engineering/audit.md).
-
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and
-ideas, [NOTICE.md](NOTICE.md) for provenance and third-party licenses, and
-[CHANGELOG.md](CHANGELOG.md) for the release history. The most useful help is a
-scene that breaks a measurement, or a better measurement with a test.
-
-## Licensing note
-
-All source in `src/`, `bin/` and `test/`, and all reference documents in `skill/`, are MIT licensed (see `LICENSE`). Dependencies keep their own licenses; see [NOTICE.md](NOTICE.md). The original OpenMotion documentation that early versions carried has been replaced with original MIT-licensed material, so the repository is free to redistribute in full. Bundle versions of GSAP, fonts and Simple Icons are read from the installed npm packages at render time, not copied into this repo.
+- [`docs/dox/`](docs/dox/) - full reference: getting started, architecture, CLI and MCP tool docs.
+- [`examples/launch-out/STORYBOARD.md`](examples/launch-out/STORYBOARD.md) - how the launch film was designed and verified.
+- [`docs/reverse-engineering/audit.md`](docs/reverse-engineering/audit.md) - what was adopted, replaced or rejected, and why.
+- [`docs/benchmarks/`](docs/benchmarks/) - package footprint, frame rates, long-form memory and A/V drift.
 
 ## Verification
 
 ```bash
 npm test
+npm run selftest
 npm run test:e2e
 npm run test:crash
 npm run test:audio-resume
 npm run test:csp
 npm run test:mcp-schema
-npm run test:long-av     # opt-in, ~3.5 minutes: two-minute 1080p A/V resume
-npm run test:scene-order # opt-in: reorder-detection on resume
-npm run test:settings-resume # opt-in: fps/resolution/segment-size changes on resume
-npm run test:component-resume # opt-in: built-in and custom component changes on resume
-npm run test:sketch-resume # opt-in: sketchRef metadata or PNG changes on resume
-npm run test:combined-mutation # opt-in: state, asset, audio and segment mutations together
-npm run test:mixed-checkpoint # opt-in: valid + corrupt + orphan segment recovery
-npm run test:concurrent # opt-in: concurrent MCP writes with no lost updates
-npm run test:contention # opt-in: 20 writers x 3 rounds sustained contention
-npm run selftest
-npm pack --dry-run   # runs prepack: tests + tarball verification
-npm run benchmark -- --write   # records docs/benchmarks/latest.md
-npm run goldens                # regenerate pinned golden frames after renderer changes
-npm run test:e2e               # authors the all-token scene through MCP and renders it
+npm run test:concurrent
+npm run test:contention
+npm pack --dry-run   # prepack: tests + tarball verification
+npm run bench:longform
 ```
 
-CI runs a pinned-Chromium golden-frame regression job plus the MCP end-to-end,
-crash-resume, audio-resume, CSP, schema, scene-order and render-setting suites.
-The fixtures are font-free geometric scenes rendered at 540p, so they stay
-stable across hosts; set `TRUEMOTION_GOLDEN=1` to run that test locally. The
-multi-minute A/V resume test (`npm run test:long-av`) is too slow for every
-push, so it runs nightly (and on demand) in `.github/workflows/nightly.yml`
-alongside the full long-form benchmark. Publishing is automated only on a `v*`
-tag via `.github/workflows/release.yml`, which verifies the tag matches
-`package.json`, runs the test suite and publishes with provenance using the
-`NPM_TOKEN` repository secret. Until that secret is configured and a tag is
-pushed, the package is not published to npm.
+Opt-in suites cover scene reorder, render-setting changes, component changes, sketch changes, combined mutation, mixed-checkpoint recovery, same-size corruption and a two-minute A/V resume. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full list.
 
-Measured footprint and frame rates on one machine are recorded in
-[docs/benchmarks/latest.md](docs/benchmarks/latest.md). The organisation-scale
-run is in [docs/benchmarks/longform.md](docs/benchmarks/longform.md): the current
-page-pool renderer completed a 2-minute 1080p timeline (1200 frames, 30 scenes)
-in 177.7 s at 6.8 frames/s with a 1278 MiB process-tree peak, 2.6x faster than
-before the page-pool change with byte-comparable output. Memory stays bounded by
-the batch and browser pool rather than video length; `--concurrency 1` reduced
-peak RSS to 977 MiB at 400 frames. Run `npm run bench:longform` to reproduce it.
-The npm package itself does not include the rendered demo film.
+CI runs pinned-browser golden frames plus the MCP, crash, audio, CSP, schema, concurrency and resume suites on Node 20 and 22. A nightly workflow runs the two-minute A/V resume and the full 1200-frame benchmark with performance guards.
 
-Audio alignment was measured over a two-minute render with a looping bed:
-23 ms drift and a confirmed tail fade, detailed in
-[docs/benchmarks/av-drift.md](docs/benchmarks/av-drift.md) (`npm run bench:av`).
-Skill references are cached by SHA-256 content hash, so same-size edits are
-still detected.
+## Contributing
 
-Long renders can be split across invocations with `--segment-size` and
-`--max-segments`, then finished with `--resume`. Completed segments are
-checkpointed as MPEG-TS files with a byte-verified manifest, so an interrupted
-render never loses work. The manifest also stores a digest of scenes, brand,
-components and `{{ASSET:...}}` file contents, so editing the state file or an
-asset between a partial render and a resume is rejected rather than producing a
-mismatched film. The same options are available on the MCP `render_video` tool.
+Contributions are welcome. The most useful help is a scene that breaks a measurement, or a better measurement with a test. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, [`NOTICE.md`](NOTICE.md) for provenance and third-party licenses, and [`CHANGELOG.md`](CHANGELOG.md) for release history.
+
+## Licensing note
+
+Source in `src/`, `bin/` and `test/`, and all references in `skill/`, are MIT licensed. Dependencies keep their own licenses. GSAP, fonts and icon data are read from installed npm packages at render time, not copied into this repository. All original proprietary documentation was replaced with original MIT-licensed material, so the repository is free to redistribute in full.

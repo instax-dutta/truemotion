@@ -2,6 +2,7 @@
 
 ## 0.3.0
 
+- Added the agent-focused launch film, a looping README GIF and a GEO/copywriting rewrite of the README with a comparison table, FAQ and repo topics for discoverability.
 - Replaced all recovered skill documentation with original MIT-licensed references.
 - Added a static seek-safety lint that rejects `from()`, external resources,
   timers, `requestAnimationFrame`, CSS keyframes and transitions.
