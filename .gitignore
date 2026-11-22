@@ -2,6 +2,7 @@ node_modules/
 .DS_Store
 *.mp4
 !examples/pro-out/pro-demo.mp4
+!examples/launch-out/launch-film.mp4
 *.m4a
 *.wav
 truemotion-state.json
@@ -10,3 +11,7 @@ examples/out/
 examples/pro-out/*
 !examples/pro-out/pro-demo.mp4
 !examples/pro-out/state.json
+!examples/launch-out/state.json
+!examples/launch-out/STORYBOARD.md
+!examples/launch-out/assets/
+!examples/launch-out/assets/*.png

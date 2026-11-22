@@ -5,13 +5,21 @@
 
 An open, harness-agnostic core for authoring and rendering motion-graphics video scenes.
 
-![Six scenes from the pro demo](docs/demo-contact-sheet.png)
+![Eight scenes from the launch film](docs/launch-film-contact-sheet.png)
 
-The [finished 29-second demo](examples/pro-out/pro-demo.mp4) and its
-[state file](examples/pro-out/state.json) are in this repository. Regenerate them with
-`npm run demo:pro`. Its sixth scene ("The toolkit") deliberately exercises every
-local helper in one shot: `{{BRAND:*}}`, `{{COMPONENT:*}}`, `{{ROUGH}}`, `{{FX}}`,
-`{{SHADERS}}` and `{{THREE}}`.
+The [finished 37-second launch film](examples/launch-out/launch-film.mp4) tells the
+agent story: describe the film, watch the agent author it through MCP, see the
+rendered frames and measurements it gets back, watch it correct a clipped actor,
+then the frame-accurate render and the open-source CTA. Its feedback scene embeds
+**real frames rendered by TrueMotion**, not mockups. The creative plan and
+verification evidence are in [STORYBOARD.md](examples/launch-out/STORYBOARD.md).
+Regenerate with `npm run demo:launch`.
+
+The earlier [29-second pro demo](examples/pro-out/pro-demo.mp4) is also included;
+regenerate it with `npm run demo:pro`. Its sixth scene ("The toolkit") deliberately
+exercises every local helper in one shot: `{{BRAND:*}}`, `{{COMPONENT:*}}`,
+`{{ROUGH}}`, `{{FX}}`, `{{SHADERS}}` and `{{THREE}}`. Its contact sheet is
+[here](docs/demo-contact-sheet.png).
 
 This project was recovered by reverse engineering **OpenMotion 1.1.0** (`/Applications/OpenMotion.app`, an Electron + React app signed by "Meta Dots", updater `anovius/openmotion`). The original ships its tools through an embedded MCP server wired to the Claude Agent SDK and Codex SDK. TrueMotion keeps the useful part, the tool contract, the scene format, and the motion-design references, and drops everything that ties it to one vendor: no Electron UI, no account, no license gate, no model SDK. The result is a plain stdio MCP server that any coding agent can drive, plus a renderer you can run yourself.
 
@@ -122,6 +130,13 @@ node examples/intro-demo.mjs
 The generated state and MP4 land in `examples/out/` (gitignored).
 
 For a larger, art-directed piece, run `node examples/pro-demo.mjs`. It authors seven scenes (kinetic wordmark, manifesto typography, prompt-to-film pipeline with typing, frame/count-up data visual, measured-continuity panels, an all-token toolkit scene, and an outro lockup) through the same MCP tools, runs `review_timeline`, and renders a 29-second 1080p H.264 film with a generated stereo ambient score into `examples/pro-out/`. The score is produced by `examples/ambient.py` (Python 3 with numpy): an Am-F-C-G-Am pad with sub layer, detuned voices, soft plucked arpeggio, breathing air texture, short feedback delays and fades, encoded to AAC. Every scene in it passes the motion audit with measured build and resolve change.
+
+For the narrative launch film built around the agent authoring loop (prompt to
+tool receipts to measured frames to correction to render), run
+`npm run demo:launch`. It authors eight scenes through MCP, runs
+`review_timeline`, and renders a 37-second 1080p film into
+`examples/launch-out/`. Its storyboard, blueprints and verification evidence are
+in [examples/launch-out/STORYBOARD.md](examples/launch-out/STORYBOARD.md).
 
 ## State file
 

@@ -49,6 +49,7 @@
     "test": "node --test test/*.test.js",
     "demo": "node examples/intro-demo.mjs",
     "demo:pro": "node examples/pro-demo.mjs",
+    "demo:launch": "node examples/launch-film.mjs",
     "selftest": "node bin/truemotion.mjs selftest",
     "benchmark": "node scripts/benchmark.mjs",
     "bench:longform": "node scripts/longform-benchmark.mjs",
